@@ -11,7 +11,12 @@ import { haversineMeters, normalizeName } from '@/lib/geo'
 // Coordinates are emitted EXACTLY as stored (no rounding, no reprojection).
 // ---------------------------------------------------------------------------
 export async function GET() {
-  const rows = await db.location.findMany({ include: { photos: true }, orderBy: { createdAt: 'asc' } })
+  const admin = await isAdminRequest()
+  const rows = await db.location.findMany({
+    where: admin ? {} : { status: 'verified' },
+    include: { photos: true },
+    orderBy: { createdAt: 'asc' },
+  })
   const locations = rows.map(serializeLocation)
 
   const features = locations.map((l) => {
