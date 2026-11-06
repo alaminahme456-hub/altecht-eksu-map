@@ -34,7 +34,7 @@ Faculties · Departments · Lecture halls · Laboratories · Libraries · Admini
 | Framework | Next.js (App Router) + React + TypeScript |
 | Map | Leaflet + OpenStreetMap raster tiles |
 | Geometry | GeoJSON (WGS84 / EPSG:4326) |
-| Database | SQLite via Prisma ORM |
+| Database | Supabase PostgreSQL + Prisma ORM + PostGIS |
 | UI | Tailwind CSS + shadcn/ui, mobile-first |
 
 ## Getting started
@@ -71,7 +71,7 @@ Open **`/#/`** for the public map and **`/#/admin`** for the data-collection das
 | `GET /api/quality` | Duplicate-pair & suspicious-coordinate report |
 | `POST /api/admin/sample-data` | Load demo sample records |
 
-## Data accuracy policy
+## Supabase database setup\n\nThe production database is the Supabase project `gsvnefxrxexdyptknsjh`. Configure `DATABASE_URL` and `DIRECT_URL` using the project's PostgreSQL connection details before running Prisma commands. The `Location` and `Photo` tables, PostGIS extension, RLS policies, and public `campus-photos` bucket are provisioned by `supabase/migrations/20261106154000_create_eksu_campus_mapping_schema.sql`. Never commit database passwords or Supabase secret keys.\n\n## Data accuracy policy
 
 1. **Never invent geography.** Locations only exist where real GPS data puts them; nothing is randomly placed or assumed relative to other buildings.
 2. **Coordinate fidelity.** Import/export never rounds, re-projects or reorders coordinates — `coordinates` stores the original captured vertices exactly as collected.
