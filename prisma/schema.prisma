@@ -3,39 +3,46 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // A campus feature: building, faculty, gate, road/pathway, etc.
-// Geometry rules (data accuracy policy):
-//  - lat/lng ALWAYS store the original collected GPS point (or polygon centroid for reference only).
-//  - `coordinates` stores the ORIGINAL captured vertex list as JSON [[lng,lat], ...]
-//    for polygon (outline) or polyline (road/pathway) features. Coordinates are
-//    never rounded, re-projected or reordered on import/export.
+// GPS values remain the original WGS84 coordinates collected in the field.
+// GeoJSON vertices are stored in their original [longitude, latitude] order.
 model Location {
   id           String   @id @default(cuid())
   name         String
-  category     String // one of CATEGORIES (see src/lib/categories.ts)
+  category     String
   description  String?
-  lat          Float // original GPS latitude (WGS84)
-  lng          Float // original GPS longitude (WGS84)
-  geometryType String   @default("point") // point | polygon | polyline
-  coordinates  String? // JSON [[lng,lat],...] original vertices for polygon/polyline
-  status       String   @default("draft") // draft (unverified) | verified
-  source       String   @default("admin") // admin | sample | import
-  externalId   String? // e.g. OSM way/relation id or imported feature id
+  lat          Float
+  lng          Float
+  geometryType String   @default("point")
+  coordinates  String?
+  status       String   @default("draft")
+  source       String   @default("admin")
+  externalId   String?
+  // PostGIS spatial index column is maintained separately in SQL.
+  spatial      Unsupported("geometry(Geometry, 4326)")?
   photos       Photo[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([category])
+  @@index([status])
+  @@index([name])
+  @@map("Location")
 }
 
-// Photographs uploaded through the admin dashboard, stored under /public/uploads.
 model Photo {
   id         String   @id @default(cuid())
   locationId String
   location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  filename   String // public URL path e.g. /uploads/xxx.jpg
+  filename   String
   caption    String?
   createdAt  DateTime @default(now())
+
+  @@index([locationId])
+  @@map("Photo")
 }
