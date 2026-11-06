@@ -7,8 +7,9 @@ type Ctx = { params: Promise<{ id: string }> }
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params
-  const row = await db.location.findUnique({
-    where: { id },
+  const admin = await isAdminRequest()
+  const row = await db.location.findFirst({
+    where: { id, ...(!admin ? { status: 'verified' } : {}) },
     include: { photos: true },
   })
   if (!row) return NextResponse.json({ error: 'Not found' }, { status: 404 })
