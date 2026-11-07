@@ -4,6 +4,7 @@ import path from 'path'
 import { randomUUID } from 'crypto'
 import { db } from '@/lib/db'
 import { isAdminRequest } from '@/lib/auth'
+import { serializeLocation } from '@/lib/types'
 
 type Ctx = { params: Promise<{ id: string }> }
 
