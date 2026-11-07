@@ -15,10 +15,12 @@ export async function GET(req: NextRequest) {
   const category = searchParams.get('category') || ''
   const status = searchParams.get('status') || ''
 
-  const admin = await isAdminRequest()\n  const rows = await db.location.findMany({
+  const admin = await isAdminRequest()
+  const rows = await db.location.findMany({
     where: {
       ...(category ? { category } : {}),
-      ...(admin && status ? { status } : {}),\n      ...(!admin ? { status: 'verified' } : {}),
+      ...(admin && status ? { status } : {}),
+      ...(!admin ? { status: 'verified' } : {}),
     },
     include: { photos: true },
     orderBy: { name: 'asc' },
