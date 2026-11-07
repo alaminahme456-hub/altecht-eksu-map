@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { isAdminRequest } from '@/lib/auth'
 import { serializeLocation } from '@/lib/types'
+import { locationInputSchema } from '@/lib/validation'
 
 type Ctx = { params: Promise<{ id: string }> }
 
