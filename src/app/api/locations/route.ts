@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const created = await db.location.create({
+  try {
+    const created = await db.location.create({
     data: {
       name: input.name,
       category: input.category,
@@ -101,10 +102,17 @@ export async function POST(req: NextRequest) {
   }
   for (const r of suspiciousReasons(created.lat, created.lng)) warnings.push(r)
 
-  return NextResponse.json(
-    { location: serializeLocation(created), warnings },
-    { status: 201 }
-  )
+    return NextResponse.json(
+      { location: serializeLocation(created), warnings },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('[POST /api/locations] Failed to save location:', error)
+    return NextResponse.json(
+      { error: 'The campus location could not be saved. Check the database connection and deployment logs.' },
+      { status: 500 }
+    )
+  }
 }
 
 // DELETE /api/locations?allSample=true — admin: remove all sample/demo records.
