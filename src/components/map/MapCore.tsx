@@ -103,14 +103,7 @@ export default function MapCore({
     [locations]
   )
 
-  const handleFeatureClick = (id: string) => {
-    if (measureMode) {
-      const loc = locations.find((l) => l.id === id)
-      if (loc) onMeasurePoint(loc.lat, loc.lng)
-    } else {
-      onSelect(id)
-    }
-  }
+  const handleFeatureClick = (id: string) => onSelect(id)
 
   return (
     <MapContainer
