@@ -33,9 +33,7 @@ export type MapCoreProps = {
   selectedId: string | null
   onSelect: (id: string | null) => void
   userPos: UserPos
-  measureMode: boolean
-  measurePoints: { lat: number; lng: number }[]
-  onMeasurePoint: (lat: number, lng: number) => void
+  routeCoordinates: [number, number][]
   basemap: 'illustrated' | 'osm'
   flyTarget: FlyTarget
   onMapReady?: (map: L.Map) => void
@@ -65,14 +63,7 @@ const userIcon = L.divIcon({
   iconAnchor: [9, 9],
 })
 
-const measureDot = L.divIcon({
-  className: '',
-  html: '<div style="width:14px;height:14px;border-radius:50%;background:#f59e0b;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-})
-
-function FlyController({ target }: { target: FlyTarget }) {
+remove measure iconfunction FlyController({ target }: { target: FlyTarget }) {
   const map = useMap()
   useEffect(() => {
     if (target) {
@@ -84,24 +75,8 @@ function FlyController({ target }: { target: FlyTarget }) {
   return null
 }
 
-function ClickHandler({
-  measureMode,
-  onMeasurePoint,
-  onSelect,
-}: {
-  measureMode: boolean
-  onMeasurePoint: (lat: number, lng: number) => void
-  onSelect: (id: null) => void
-}) {
-  useMapEvents({
-    click(e) {
-      if (measureMode) {
-        onMeasurePoint(e.latlng.lat, e.latlng.lng)
-      } else {
-        onSelect(null)
-      }
-    },
-  })
+function ClickHandler({ onSelect }: { onSelect: (id: null) => void }) {
+  useMapEvents({ click() { onSelect(null) } })
   return null
 }
 
@@ -110,9 +85,7 @@ export default function MapCore({
   selectedId,
   onSelect,
   userPos,
-  measureMode,
-  measurePoints,
-  onMeasurePoint,
+  routeCoordinates,
   basemap,
   flyTarget,
   onMapReady,
@@ -170,7 +143,7 @@ export default function MapCore({
 
       <ScaleControl position="bottomright" imperial={false} />
       <FlyController target={flyTarget} />
-      <ClickHandler measureMode={measureMode} onMeasurePoint={onMeasurePoint} onSelect={onSelect} />
+      <ClickHandler onSelect={onSelect} />
 
       {/* Approximate campus envelope — orientation aid, NOT a surveyed boundary */}
       <Circle
@@ -269,17 +242,8 @@ export default function MapCore({
         </>
       )}
 
-      {/* Measure points + connecting dashed line */}
-      {measurePoints.map((p, i) => (
-        <Marker key={`m${i}`} position={[p.lat, p.lng]} icon={measureDot} interactive={false} />
-      ))}
-      {measurePoints.length >= 2 && (
-        <Polyline
-          positions={measurePoints.map((q) => [q.lat, q.lng] as [number, number])}
-          interactive={false}
-          pathOptions={{ color: '#f59e0b', weight: 3, dashArray: '2 6' }}
-        />
-      )}
+      {/* Pedestrian route snapped to mapped roads and footpaths */}
+      {routeCoordinates.length >= 2 && <Polyline positions={routeCoordinates} interactive={false} pathOptions={{ color: '#2563eb', weight: 6, opacity: 0.92, lineCap: 'round', lineJoin: 'round' }} />}
     </MapContainer>
   )
 }
