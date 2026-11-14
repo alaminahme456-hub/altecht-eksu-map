@@ -233,7 +233,7 @@ export default function CampusMapApp() {
     )
   }
 
-remove measure handlers  const distanceFromUser =
+  const distanceFromUser =
     selected && userPos
       ? haversineMeters(userPos.lat, userPos.lng, selected.lat, selected.lng)
       : null
