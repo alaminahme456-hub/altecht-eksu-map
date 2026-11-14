@@ -21,6 +21,7 @@ export type MapPickerProps = {
   vertices: [number, number][] // [[lng,lat], ...] original order preserved
   onPointChange: (lat: number, lng: number) => void
   onAddVertex: (lat: number, lng: number) => void
+  followLastVertex?: boolean
 }
 
 const pinIcon = L.divIcon({
@@ -55,7 +56,16 @@ function Recenter({ lat, lng }: { lat: number; lng: number }) {
   return null
 }
 
-export default function MapPicker({ mode, point, vertices, onPointChange, onAddVertex }: MapPickerProps) {
+function FollowLastVertex({ latlngs, enabled }: { latlngs: [number, number][]; enabled: boolean }) {
+  const map = useMap()
+  const last = latlngs[latlngs.length - 1]
+  useEffect(() => {
+    if (enabled && last) map.panTo(last, { animate: true, duration: 0.35 })
+  }, [enabled, last?.[0], last?.[1], map])
+  return null
+}
+
+export default function MapPicker({ mode, point, vertices, onPointChange, onAddVertex, followLastVertex = false }: MapPickerProps) {
   const latlngs = useMemo(() => vertices.map(([lng, lat]) => [lat, lng] as [number, number]), [vertices])
   const center: [number, number] = point
     ? [point.lat, point.lng]
@@ -79,6 +89,7 @@ export default function MapPicker({ mode, point, vertices, onPointChange, onAddV
           attribution='&copy; OpenStreetMap contributors'
         />
         <Tapper mode={mode} onPointChange={onPointChange} onAddVertex={onAddVertex} />
+        <FollowLastVertex latlngs={latlngs} enabled={followLastVertex} />
         {mode === 'point' ? (
           point ? (
             <>
