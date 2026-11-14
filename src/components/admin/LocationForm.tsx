@@ -155,8 +155,18 @@ export default function LocationForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, full: true }),
       })
-      const data = (await res.json()) as { location?: LocationDTO; warnings?: string[]; error?: string }
-      if (!res.ok || !data.location) throw new Error(data.error || 'Save failed')
+      const responseText = await res.text()
+      let data: { location?: LocationDTO; warnings?: string[]; error?: string; issues?: unknown } = {}
+      if (responseText.trim()) {
+        try {
+          data = JSON.parse(responseText)
+        } catch {
+          throw new Error(`The server returned an invalid response (HTTP ${res.status}). Please try again; if it continues, check the deployment logs.`)
+        }
+      }
+      if (!res.ok || !data.location) {
+        throw new Error(data.error || `Save failed (HTTP ${res.status}). The server did not return a location record.`)
+      }
       await uploadStaged(data.location.id)
       onSaved(data.location, data.warnings ?? [])
     } catch (e) {
