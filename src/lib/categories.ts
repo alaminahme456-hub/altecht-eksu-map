@@ -1,4 +1,6 @@
-// The 13 EKSU campus location categories (per project specification).
+// Shared category registry for the map filters and the admin add/edit form.
+// Includes the standard campus categories plus every category currently used
+// by saved EKSU map records. Keep labels exact to avoid category mismatches.
 export const CATEGORIES = [
   'Faculties',
   'Departments',
@@ -13,6 +15,15 @@ export const CATEGORIES = [
   'Entrances and gates',
   'Roads and pathways',
   'Other campus facilities',
+  // Additional categories already present in campus map data.
+  'Auditoriums',
+  'Banks',
+  'Buildings',
+  'CBT Centres',
+  'ICT',
+  'Lecture Halls',
+  'Schools',
+  'Shops',
 ] as const
 
 export type Category = (typeof CATEGORIES)[number]
@@ -34,6 +45,14 @@ export const CATEGORY_META: Record<
   'Entrances and gates': { icon: '🚪', color: '#525252' },
   'Roads and pathways': { icon: '🛣️', color: '#a16207', isLinear: true },
   'Other campus facilities': { icon: '📍', color: '#0369a1' },
+  Auditoriums: { icon: '🎤', color: '#7c3aed' },
+  Banks: { icon: '🏦', color: '#0f766e' },
+  Buildings: { icon: '🏢', color: '#64748b' },
+  'CBT Centres': { icon: '💻', color: '#2563eb' },
+  ICT: { icon: '🖥️', color: '#0891b2' },
+  'Lecture Halls': { icon: '📝', color: '#0d9488' },
+  Schools: { icon: '🏫', color: '#9333ea' },
+  Shops: { icon: '🛍️', color: '#c2410c' },
 }
 
 export function categoryMeta(category: string) {
