@@ -311,7 +311,7 @@ export default function LocationForm({
               setPoint(null)
               setLatText('')
               setLngText('')
-              if (mode === 'polyline' && !category) setCategory('Roads and pathways')
+              if (mode === 'polyline') setCategory('Roads and pathways')
             }
           }}
           className="grid grid-cols-3 gap-2"
@@ -418,7 +418,7 @@ export default function LocationForm({
                 <Button type="button" variant="outline" size="sm" onClick={() => setVertices((v) => v.slice(0, -1))} disabled={vertices.length === 0}>
                   <Undo2 className="h-3.5 w-3.5" /> Undo last
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setVertices([])} disabled={vertices.length === 0}>
+                <Button type="button" variant="outline" size="sm" onClick={() => { setVertices([]); lastRecordedRef.current = null }} disabled={vertices.length === 0}>
                   Clear
                 </Button>
               </div>
