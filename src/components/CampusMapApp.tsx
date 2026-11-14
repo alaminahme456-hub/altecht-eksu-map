@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   Crosshair,
   Info,
@@ -31,7 +32,7 @@ import {
   X,
 } from 'lucide-react'
 import { CATEGORIES, categoryMeta } from '@/lib/categories'
-import { formatDistance, haversineMeters, pathLengthMeters } from '@/lib/geo'
+import { EKSU_CAMPUS_CENTER, formatDistance, haversineMeters, pathLengthMeters } from '@/lib/geo'
 import type { LocationDTO } from '@/lib/types'
 import type { FlyTarget, MapCoreProps } from '@/components/map/MapCore'
 
@@ -58,6 +59,8 @@ export default function CampusMapApp() {
   const [userPos, setUserPos] = useState<MapCoreProps['userPos']>(null)
   const [locating, setLocating] = useState(false)
   const [geoError, setGeoError] = useState<string | null>(null)
+  const [gatePromptOpen, setGatePromptOpen] = useState(false)
+  const [gatePickerOpen, setGatePickerOpen] = useState(false)
   const [measureMode, setMeasureMode] = useState(false)
   const [measurePoints, setMeasurePoints] = useState<{ lat: number; lng: number }[]>([])
   const [showLegend, setShowLegend] = useState(false)
@@ -121,6 +124,31 @@ export default function CampusMapApp() {
     })
   }
 
+  const campusVicinityRadiusMeters = 1200
+
+  const gateLocations = useMemo(
+    () => locations.filter((location) =>
+      location.category.trim().toLowerCase() === 'entrances and gates' &&
+      location.geometryType === 'point' &&
+      Number.isFinite(location.lat) &&
+      Number.isFinite(location.lng)
+    ),
+    [locations]
+  )
+
+  const openGateDirections = (gate: LocationDTO) => {
+    if (!userPos) {
+      setGatePickerOpen(false)
+      setGeoError('Your current location is not available. Tap the location button and allow GPS access first.')
+      return
+    }
+    const origin = `${userPos.lat},${userPos.lng}`
+    const destination = `${gate.lat},${gate.lng}`
+    const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=walking`
+    window.open(directionsUrl, '_blank', 'noopener,noreferrer')
+    setGatePickerOpen(false)
+  }
+
   const locateMe = () => {
     if (!('geolocation' in navigator)) {
       setGeoError('Location is not supported on this device')
@@ -138,6 +166,15 @@ export default function CampusMapApp() {
         setUserPos(p)
         setLocating(false)
         setFlyTarget({ ...p, zoom: 17, key: Date.now() })
+        const distanceFromCampusCenter = haversineMeters(
+          p.lat,
+          p.lng,
+          EKSU_CAMPUS_CENTER.lat,
+          EKSU_CAMPUS_CENTER.lng
+        )
+        if (distanceFromCampusCenter > campusVicinityRadiusMeters) {
+          setGatePromptOpen(true)
+        }
       },
       (err) => {
         setLocating(false)
@@ -531,6 +568,64 @@ export default function CampusMapApp() {
           )}
         </DrawerContent>
       </Drawer>
+
+      <Dialog open={gatePromptOpen} onOpenChange={setGatePromptOpen}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>You are not around the campus vicinity</DialogTitle>
+            <DialogDescription>
+              Would you like directions to an EKSU campus gate?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setGatePromptOpen(false)}>
+              No
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => {
+                setGatePromptOpen(false)
+                setGatePickerOpen(true)
+              }}
+            >
+              Yes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={gatePickerOpen} onOpenChange={setGatePickerOpen}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Choose a campus gate</DialogTitle>
+            <DialogDescription>
+              Select a saved EKSU entrance to get walking directions from your current location in Google Maps.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-64 space-y-2 overflow-y-auto">
+            {gateLocations.length > 0 ? gateLocations.map((gate) => (
+              <button
+                key={gate.id}
+                type="button"
+                onClick={() => openGateDirections(gate)}
+                className="flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-muted"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold">{gate.name}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {gate.lat.toFixed(6)}, {gate.lng.toFixed(6)}
+                  </span>
+                </span>
+                <MapPinned className="h-5 w-5 shrink-0 text-primary" />
+              </button>
+            )) : (
+              <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+                No campus gates have been saved yet. Add a location under “Entrances and gates” in the Admin dashboard.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {loading && (
         <div className="absolute bottom-3 left-3 z-[900] flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs shadow">
