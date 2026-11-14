@@ -38,15 +38,17 @@ export default function LocationForm({
   editing,
   onSaved,
   onCancel,
+  initialGeometry = 'point',
 }: {
   editing: LocationDTO | null
   onSaved: (loc: LocationDTO, warnings: string[]) => void
   onCancel: () => void
+  initialGeometry?: PickerMode
 }) {
   const [name, setName] = useState(editing?.name ?? '')
-  const [category, setCategory] = useState<string>(editing?.category ?? '')
+  const [category, setCategory] = useState<string>(editing?.category ?? (initialGeometry === 'polyline' ? 'Roads and pathways' : ''))
   const [description, setDescription] = useState(editing?.description ?? '')
-  const [geometryType, setGeometryType] = useState<PickerMode>(editing?.geometryType ?? 'point')
+  const [geometryType, setGeometryType] = useState<PickerMode>(editing?.geometryType ?? initialGeometry)
   const [status, setStatus] = useState<'draft' | 'verified'>(editing?.status ?? 'draft')
   const [latText, setLatText] = useState(editing ? String(editing.lat) : '')
   const [lngText, setLngText] = useState(editing ? String(editing.lng) : '')
