@@ -369,6 +369,7 @@ export default function LocationForm({
           mode={geometryType}
           point={point}
           vertices={vertices}
+          followLastVertex={recording}
           onPointChange={setPointFromMap}
           onAddVertex={(lat, lng) => setVertices((prev) => [...prev, [lng, lat]])}
         />
