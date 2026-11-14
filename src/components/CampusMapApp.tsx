@@ -34,6 +34,7 @@ import {
 import { CATEGORIES, categoryMeta } from '@/lib/categories'
 import { EKSU_CAMPUS_CENTER, formatDistance, haversineMeters, pathLengthMeters } from '@/lib/geo'
 import type { LocationDTO } from '@/lib/types'
+import { routeOnRecordedPaths } from '@/lib/path-routing'
 import type { FlyTarget, MapCoreProps } from '@/components/map/MapCore'
 
 const MapCore = dynamic(() => import('@/components/map/MapCore'), {
@@ -172,6 +173,20 @@ export default function CampusMapApp() {
     }
     setRouteLoading(true)
     try {
+      // Prefer the real campus walkways surveyed and saved by administrators.
+      const recordedRoute = routeOnRecordedPaths(locations, origin, { lat: destination.lat, lng: destination.lng })
+      if (recordedRoute) {
+        setRouteCoordinates(recordedRoute.coordinates)
+        setRouteSummary({ distance: recordedRoute.distance, duration: recordedRoute.distance / 1.25 })
+        setFlyTarget({ lat: destination.lat, lng: destination.lng, zoom: 18, key: Date.now() })
+        setSelectedId(destination.id)
+        setSheetOpen(false)
+        setDirectionPickerOpen(false)
+        setGatePickerOpen(false)
+        return
+      }
+
+      // Until the recorded network covers both ends, use the OSM pedestrian router.
       const request = { locations: [{ lat: origin.lat, lon: origin.lng }, { lat: destination.lat, lon: destination.lng }], costing: 'pedestrian', units: 'kilometers', directions_options: { units: 'kilometers' } }
       const response = await fetch(`https://valhalla1.openstreetmap.de/route?json=${encodeURIComponent(JSON.stringify(request))}`)
       if (!response.ok) throw new Error('Walking route service is temporarily unavailable.')
