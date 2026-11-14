@@ -402,7 +402,7 @@ export default function CampusMapApp() {
         <div className="absolute inset-x-0 bottom-6 z-[1000] mx-auto w-fit max-w-[92%]"><div className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-xs font-medium text-white shadow-lg"><TriangleAlert className="h-4 w-4" /> {routeError || geoError}<button onClick={() => { setGeoError(null); setRouteError(null) }} aria-label="Dismiss"><X className="h-4 w-4" /></button></div></div>
       )}
 
-old geo error      {/* ---------- Legend ---------- */}
+      {/* ---------- Legend ---------- */}
       {showLegend && (
         <div className="absolute bottom-3 left-3 z-[1000] w-72 max-w-[86%] rounded-xl border bg-white/97 p-3 text-xs shadow-xl">
           <div className="mb-2 flex items-center justify-between">
