@@ -30,7 +30,7 @@ async function storageRequest(path: string, init: RequestInit = {}) {
 }
 
 async function ensureBucket() {
-  const { url } = storageConfig()
+  storageConfig()
   try {
     await storageRequest(`/bucket/${BUCKET}`)
     return
