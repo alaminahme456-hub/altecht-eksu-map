@@ -25,7 +25,7 @@ import {
   MapPinned,
   Minus,
   Plus,
-  Ruler,
+  Navigation,
   Search,
   ShieldCheck,
   TriangleAlert,
@@ -61,8 +61,11 @@ export default function CampusMapApp() {
   const [geoError, setGeoError] = useState<string | null>(null)
   const [gatePromptOpen, setGatePromptOpen] = useState(false)
   const [gatePickerOpen, setGatePickerOpen] = useState(false)
-  const [measureMode, setMeasureMode] = useState(false)
-  const [measurePoints, setMeasurePoints] = useState<{ lat: number; lng: number }[]>([])
+  const [directionPickerOpen, setDirectionPickerOpen] = useState(false)
+  const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>([])
+  const [routeSummary, setRouteSummary] = useState<{ distance: number; duration: number } | null>(null)
+  const [routeLoading, setRouteLoading] = useState(false)
+  const [routeError, setRouteError] = useState<string | null>(null)
   const [showLegend, setShowLegend] = useState(false)
   const mapRef = useRef<L.Map | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -136,18 +139,60 @@ export default function CampusMapApp() {
     [locations]
   )
 
-  const openGateDirections = (gate: LocationDTO) => {
-    if (!userPos) {
-      setGatePickerOpen(false)
-      setGeoError('Your current location is not available. Tap the location button and allow GPS access first.')
-      return
+  const decodePolyline6 = (encoded: string): [number, number][] => {
+    const points: [number, number][] = []
+    let index = 0, lat = 0, lng = 0
+    while (index < encoded.length) {
+      let result = 0, shift = 0, byte = 0
+      do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5 } while (byte >= 0x20)
+      lat += (result & 1) ? ~(result >> 1) : (result >> 1)
+      result = 0; shift = 0
+      do { byte = encoded.charCodeAt(index++) - 63; result |= (byte & 0x1f) << shift; shift += 5 } while (byte >= 0x20)
+      lng += (result & 1) ? ~(result >> 1) : (result >> 1)
+      points.push([lat / 1e6, lng / 1e6])
     }
-    const origin = `${userPos.lat},${userPos.lng}`
-    const destination = `${gate.lat},${gate.lng}`
-    const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=walking`
-    window.open(directionsUrl, '_blank', 'noopener,noreferrer')
-    setGatePickerOpen(false)
+    return points
   }
+
+  const buildRoute = async (destination: LocationDTO) => {
+    let origin = userPos
+    setRouteError(null)
+    if (!origin) {
+      if (!navigator.geolocation) { setRouteError('Location is not supported on this device.'); return }
+      setRouteLoading(true)
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000 }))
+        origin = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }
+        setUserPos(origin)
+      } catch {
+        setRouteLoading(false)
+        setRouteError('Allow location access so we can find your starting point.')
+        return
+      }
+    }
+    setRouteLoading(true)
+    try {
+      const request = { locations: [{ lat: origin.lat, lon: origin.lng }, { lat: destination.lat, lon: destination.lng }], costing: 'pedestrian', units: 'kilometers', directions_options: { units: 'kilometers' } }
+      const response = await fetch(`https://valhalla1.openstreetmap.de/route?json=${encodeURIComponent(JSON.stringify(request))}`)
+      if (!response.ok) throw new Error('Walking route service is temporarily unavailable.')
+      const data = await response.json()
+      const leg = data?.trip?.legs?.[0]
+      if (!leg?.shape) throw new Error('No mapped walking path was found for this route.')
+      const route = decodePolyline6(leg.shape)
+      if (route.length < 2) throw new Error('The walking route could not be drawn.')
+      setRouteCoordinates(route)
+      setRouteSummary({ distance: Number(data.trip.summary.length) * 1000, duration: Number(data.trip.summary.time) })
+      setFlyTarget({ lat: destination.lat, lng: destination.lng, zoom: 18, key: Date.now() })
+      setSelectedId(destination.id)
+      setSheetOpen(false)
+      setDirectionPickerOpen(false)
+      setGatePickerOpen(false)
+    } catch (error) {
+      setRouteError(error instanceof Error ? error.message : 'Could not calculate a walking route.')
+    } finally { setRouteLoading(false) }
+  }
+
+  const openGateDirections = (gate: LocationDTO) => { void buildRoute(gate) }
 
   const locateMe = () => {
     if (!('geolocation' in navigator)) {
@@ -188,25 +233,7 @@ export default function CampusMapApp() {
     )
   }
 
-  const handleMeasurePoint = (lat: number, lng: number) => {
-    setMeasurePoints((prev) => (prev.length >= 2 ? [{ lat, lng }] : [...prev, { lat, lng }]))
-  }
-
-  const measureDistance =
-    measurePoints.length === 2
-      ? haversineMeters(measurePoints[0].lat, measurePoints[0].lng, measurePoints[1].lat, measurePoints[1].lng)
-      : null
-
-  const toggleMeasure = () => {
-    setMeasureMode((m) => !m)
-    setMeasurePoints([])
-    if (!measureMode) {
-      setSheetOpen(false)
-      setSelectedId(null)
-    }
-  }
-
-  const distanceFromUser =
+remove measure handlers  const distanceFromUser =
     selected && userPos
       ? haversineMeters(userPos.lat, userPos.lng, selected.lat, selected.lng)
       : null
@@ -223,9 +250,7 @@ export default function CampusMapApp() {
           setSheetOpen(id !== null)
         }}
         userPos={userPos}
-        measureMode={measureMode}
-        measurePoints={measurePoints}
-        onMeasurePoint={handleMeasurePoint}
+        routeCoordinates={routeCoordinates}
         basemap={basemap}
         flyTarget={flyTarget}
         onMapReady={(m) => (mapRef.current = m)}
@@ -355,12 +380,8 @@ export default function CampusMapApp() {
         >
           {locating ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <Crosshair className="h-4.5 w-4.5" />}
         </MapButton>
-        <MapButton
-          label="Measure distance between two points"
-          onClick={toggleMeasure}
-          active={measureMode}
-        >
-          <Ruler className="h-4.5 w-4.5" />
+        <MapButton label="Need direction" onClick={() => { setRouteError(null); setDirectionPickerOpen(true) }} active={routeCoordinates.length > 0}>
+          <Navigation className="h-4.5 w-4.5" />
         </MapButton>
         <MapButton
           label={`Basemap: ${basemap === 'osm' ? 'Standard OSM' : 'Illustrated'} — tap to switch`}
@@ -373,45 +394,15 @@ export default function CampusMapApp() {
         </MapButton>
       </div>
 
-      {/* ---------- Measure chip ---------- */}
-      {measureMode && (
-        <div className="absolute inset-x-0 top-[7.5rem] z-[1000] mx-auto w-fit max-w-[92%]">
-          <div className="flex items-center gap-2 rounded-full bg-amber-500 px-4 py-2 text-xs font-semibold text-white shadow-lg">
-            <Ruler className="h-4 w-4" />
-            {measureDistance !== null ? (
-              <>
-                <span>Straight-line distance: {formatDistance(measureDistance)}</span>
-                <button
-                  onClick={() => setMeasurePoints([])}
-                  className="rounded-full bg-white/25 px-2 py-0.5"
-                >
-                  Restart
-                </button>
-                <button onClick={toggleMeasure} aria-label="Exit measure mode">
-                  <X className="h-4 w-4" />
-                </button>
-              </>
-            ) : measurePoints.length === 1 ? (
-              <span>Tap the second point…</span>
-            ) : (
-              <span>Tap the first point on the map…</span>
-            )}
-          </div>
-        </div>
+      {routeSummary && routeCoordinates.length > 1 && (
+        <div className="absolute inset-x-0 top-[7.5rem] z-[1000] mx-auto w-fit max-w-[92%]"><div className="flex items-center gap-2 rounded-full border bg-white/95 px-4 py-2 text-xs font-semibold shadow-lg"><Navigation className="h-4 w-4 text-primary" /> Walking route · {formatDistance(routeSummary.distance)} · {Math.max(1, Math.round(routeSummary.duration / 60))} min <button onClick={() => { setRouteCoordinates([]); setRouteSummary(null) }} aria-label="Clear route"><X className="h-4 w-4" /></button></div></div>
       )}
 
-      {geoError && (
-        <div className="absolute inset-x-0 bottom-6 z-[1000] mx-auto w-fit">
-          <div className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-xs font-medium text-white shadow-lg">
-            <TriangleAlert className="h-4 w-4" /> {geoError}
-            <button onClick={() => setGeoError(null)} aria-label="Dismiss">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+      {(geoError || routeError) && (
+        <div className="absolute inset-x-0 bottom-6 z-[1000] mx-auto w-fit max-w-[92%]"><div className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-xs font-medium text-white shadow-lg"><TriangleAlert className="h-4 w-4" /> {routeError || geoError}<button onClick={() => { setGeoError(null); setRouteError(null) }} aria-label="Dismiss"><X className="h-4 w-4" /></button></div></div>
       )}
 
-      {/* ---------- Legend ---------- */}
+old geo error      {/* ---------- Legend ---------- */}
       {showLegend && (
         <div className="absolute bottom-3 left-3 z-[1000] w-72 max-w-[86%] rounded-xl border bg-white/97 p-3 text-xs shadow-xl">
           <div className="mb-2 flex items-center justify-between">
@@ -532,17 +523,8 @@ export default function CampusMapApp() {
               </div>
 
               <div className="mt-3 flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => {
-                    setMeasureMode(true)
-                    setMeasurePoints([{ lat: selected.lat, lng: selected.lng }])
-                    setSheetOpen(false)
-                  }}
-                >
-                  <Ruler className="h-4 w-4" /> Measure from here
+                <Button variant="outline" size="sm" className="flex-1" disabled={routeLoading} onClick={() => { void buildRoute(selected) }}>
+                  {routeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />} Need direction
                 </Button>
                 <Button
                   variant="outline"
@@ -594,12 +576,19 @@ export default function CampusMapApp() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={directionPickerOpen} onOpenChange={setDirectionPickerOpen}>
+        <DialogContent className="max-w-sm rounded-2xl"><DialogHeader><DialogTitle>Where do you want to go?</DialogTitle><DialogDescription>Choose a saved campus location to see a walking route on this map.</DialogDescription></DialogHeader>
+          <div className="max-h-72 space-y-2 overflow-y-auto">{locations.filter((location) => location.geometryType === 'point').map((destination) => (<button key={destination.id} type="button" disabled={routeLoading} onClick={() => { void buildRoute(destination) }} className="flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left hover:bg-muted disabled:opacity-50"><span className="min-w-0"><span className="block truncate text-sm font-semibold">{destination.name}</span><span className="block text-xs text-muted-foreground">{destination.category}</span></span><Navigation className="h-4 w-4 shrink-0 text-primary" /></button>))}</div>
+          {routeLoading && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Calculating walking route…</div>}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={gatePickerOpen} onOpenChange={setGatePickerOpen}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
             <DialogTitle>Choose a campus gate</DialogTitle>
             <DialogDescription>
-              Select a saved EKSU entrance to get walking directions from your current location in Google Maps.
+              Select a saved EKSU entrance to draw a walking route from your current location directly on this campus map.
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-64 space-y-2 overflow-y-auto">
