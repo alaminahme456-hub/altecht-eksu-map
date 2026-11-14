@@ -1,23 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { unlink } from 'fs/promises'
-import path from 'path'
+import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { isAdminRequest } from '@/lib/auth'
+import { removeCampusPhoto } from '@/lib/storage'
 
 type Ctx = { params: Promise<{ id: string }> }
 
-export async function DELETE(_req: NextRequest, ctx: Ctx) {
+export async function DELETE(_req: Request, ctx: Ctx) {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Administrator access required' }, { status: 401 })
   }
   const { id } = await ctx.params
   const photo = await db.photo.findUnique({ where: { id } })
   if (!photo) return NextResponse.json({ error: 'Photo not found' }, { status: 404 })
-  await db.photo.delete({ where: { id } })
+
   try {
-    await unlink(path.join(process.cwd(), 'public', photo.filename))
-  } catch {
-    // file may already be gone; the DB record is the source of truth
+    await removeCampusPhoto(photo.filename)
+    await db.photo.delete({ where: { id } })
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('[DELETE /api/photos/:id] Failed:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Photo deletion failed' },
+      { status: 500 }
+    )
   }
-  return NextResponse.json({ ok: true })
 }
