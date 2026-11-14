@@ -63,7 +63,7 @@ const userIcon = L.divIcon({
   iconAnchor: [9, 9],
 })
 
-remove measure iconfunction FlyController({ target }: { target: FlyTarget }) {
+function FlyController({ target }: { target: FlyTarget }) {
   const map = useMap()
   useEffect(() => {
     if (target) {
