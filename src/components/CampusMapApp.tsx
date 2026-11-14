@@ -20,7 +20,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import {
   Crosshair,
   Info,
-  Layers,
   Loader2,
   MapPinned,
   Minus,
@@ -397,12 +396,6 @@ export default function CampusMapApp() {
         </MapButton>
         <MapButton label="Need direction" onClick={() => { setRouteError(null); setDirectionPickerOpen(true) }} active={routeCoordinates.length > 0}>
           <Navigation className="h-4.5 w-4.5" />
-        </MapButton>
-        <MapButton
-          label={`Basemap: ${basemap === 'osm' ? 'Standard OSM' : 'Illustrated'} — tap to switch`}
-          onClick={() => setBasemap((b) => (b === 'illustrated' ? 'osm' : 'illustrated'))}
-        >
-          <Layers className="h-4.5 w-4.5" />
         </MapButton>
         <MapButton label="Map legend" onClick={() => setShowLegend((s) => !s)} active={showLegend}>
           <Info className="h-4.5 w-4.5" />
