@@ -7,7 +7,7 @@
  * Duplicate / suspicious-coordinate warnings are surfaced after save but
  * never block the collection work — the administrator decides.
  */
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,9 +18,9 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Crosshair, Loader2, MapPin, Shapes as PolygonIcon, Route, Save, TriangleAlert, Undo2, X } from 'lucide-react'
+import { Crosshair, Loader2, MapPin, Shapes as PolygonIcon, Route, Save, TriangleAlert, Undo2, X, CircleDot, Square } from 'lucide-react'
 import { CATEGORIES } from '@/lib/categories'
-import { suspiciousReasons } from '@/lib/geo'
+import { haversineMeters, pathLengthMeters, suspiciousReasons } from '@/lib/geo'
 import type { LocationDTO, PhotoDTO } from '@/lib/types'
 import type { MapPickerProps, PickerMode } from '@/components/admin/MapPicker'
 import PhotoUploader from '@/components/admin/PhotoUploader'
@@ -59,6 +59,69 @@ export default function LocationForm({
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [recording, setRecording] = useState(false)
+  const [recordingMessage, setRecordingMessage] = useState<string | null>(null)
+  const watchIdRef = useRef<number | null>(null)
+  const lastRecordedRef = useRef<{ lat: number; lng: number; at: number } | null>(null)
+
+  const stopRecording = () => {
+    if (watchIdRef.current !== null && 'geolocation' in navigator) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+      watchIdRef.current = null
+    }
+    setRecording(false)
+    setRecordingMessage('Recording paused. You can resume or save this pathway.')
+  }
+
+  useEffect(() => () => {
+    if (watchIdRef.current !== null && 'geolocation' in navigator) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+    }
+  }, [])
+
+  const startRecording = () => {
+    setError(null)
+    setRecordingMessage(null)
+    if (!('geolocation' in navigator)) {
+      setError('GPS recording is not supported by this browser.')
+      return
+    }
+    if (watchIdRef.current !== null) return
+    setRecording(true)
+    setRecordingMessage('Waiting for a good GPS signal…')
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude: lat, longitude: lng, accuracy } = position.coords
+        if (accuracy > 40) {
+          setRecordingMessage(`GPS accuracy is currently ±${Math.round(accuracy)} m. Waiting for a stronger signal…`)
+          return
+        }
+        const now = Date.now()
+        const previous = lastRecordedRef.current
+        if (!previous) {
+          lastRecordedRef.current = { lat, lng, at: now }
+          setVertices((current) => [...current, [lng, lat]])
+          setRecordingMessage(`Recording pathway · GPS accuracy ±${Math.round(accuracy)} m`)
+          return
+        }
+        const moved = haversineMeters(previous.lat, previous.lng, lat, lng)
+        if (moved >= 3 || (moved >= 1.5 && now - previous.at >= 5000)) {
+          lastRecordedRef.current = { lat, lng, at: now }
+          setVertices((current) => [...current, [lng, lat]])
+        }
+        setRecordingMessage(`Recording pathway · GPS accuracy ±${Math.round(accuracy)} m`)
+      },
+      (gpsError) => {
+        stopRecording()
+        setError(gpsError.code === gpsError.PERMISSION_DENIED
+          ? 'Allow precise location access in your browser settings, then start recording again.'
+          : 'GPS signal was lost. Your recorded points are safe; you can resume recording.')
+      },
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 }
+    )
+  }
+
+  const recordedDistance = useMemo(() => pathLengthMeters(vertices), [vertices])
 
   const latNum = parseFloat(latText)
   const lngNum = parseFloat(lngText)
@@ -148,6 +211,7 @@ export default function LocationForm({
       }
     }
 
+    stopRecording()
     setSaving(true)
     try {
       const res = await fetch(editing ? `/api/locations/${editing.id}` : '/api/locations', {
@@ -241,11 +305,13 @@ export default function LocationForm({
             const mode = v as PickerMode
             setGeometryType(mode)
             if (mode === 'point') {
+              stopRecording()
               setVertices([])
             } else {
               setPoint(null)
               setLatText('')
               setLngText('')
+              if (mode === 'polyline' && !category) setCategory('Roads and pathways')
             }
           }}
           className="grid grid-cols-3 gap-2"
@@ -268,6 +334,36 @@ export default function LocationForm({
             </Label>
           ))}
         </RadioGroup>
+
+        {geometryType === 'polyline' && (
+          <div className="space-y-2 rounded-lg border border-teal-200 bg-teal-50/70 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold text-teal-950">Record the real walkway with GPS</p>
+                <p className="text-xs text-teal-800">Start recording, then walk along the path with this page open.</p>
+              </div>
+              <Badge variant={recording ? 'default' : 'outline'} className={recording ? 'bg-red-600' : ''}>
+                {recording ? '● Recording' : 'Not recording'}
+              </Badge>
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" onClick={startRecording} disabled={recording} className="flex-1">
+                <CircleDot className="h-4 w-4" /> Start GPS recording
+              </Button>
+              <Button type="button" variant="outline" onClick={stopRecording} disabled={!recording}>
+                <Square className="h-4 w-4" /> Stop
+              </Button>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-teal-900">
+              <span>{vertices.length} GPS/map points collected</span>
+              <span>{Math.round(recordedDistance)} m recorded</span>
+            </div>
+            {recordingMessage && <p aria-live="polite" className="text-xs text-teal-900">{recordingMessage}</p>}
+            <p className="text-[11px] leading-relaxed text-teal-800">
+              Keep your phone screen awake and location permission set to precise. Walk on the centre of the walkway. GPS points with poor accuracy are ignored. You can pause, resume, or add a few manual map points before saving.
+            </p>
+          </div>
+        )}
 
         <MapPicker
           mode={geometryType}
