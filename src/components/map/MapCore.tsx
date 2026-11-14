@@ -80,6 +80,16 @@ function ClickHandler({ onSelect }: { onSelect: (id: null) => void }) {
   return null
 }
 
+function RouteViewport({ coordinates }: { coordinates: [number, number][] }) {
+  const map = useMap()
+  useEffect(() => {
+    if (coordinates.length >= 2) {
+      map.fitBounds(coordinates, { padding: [70, 70], maxZoom: 18, animate: true })
+    }
+  }, [coordinates, map])
+  return null
+}
+
 export default function MapCore({
   locations,
   selectedId,
@@ -137,6 +147,7 @@ export default function MapCore({
       <ScaleControl position="bottomright" imperial={false} />
       <FlyController target={flyTarget} />
       <ClickHandler onSelect={onSelect} />
+      <RouteViewport coordinates={routeCoordinates} />
 
       {/* Approximate campus envelope — orientation aid, NOT a surveyed boundary */}
       <Circle
