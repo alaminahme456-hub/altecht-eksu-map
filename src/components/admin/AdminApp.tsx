@@ -28,6 +28,7 @@ import {
   LogOut,
   MapPinned,
   Map as MapIcon,
+  Route,
   Pencil,
   Plus,
   Search,
@@ -58,6 +59,7 @@ export default function AdminApp() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [formEditing, setFormEditing] = useState<LocationDTO | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [formGeometry, setFormGeometry] = useState<'point' | 'polyline'>('point')
   const [deleteTarget, setDeleteTarget] = useState<LocationDTO | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
@@ -250,13 +252,16 @@ export default function AdminApp() {
         {formOpen ? (
           <LocationForm
             editing={formEditing}
+            initialGeometry={formGeometry}
             onCancel={() => {
               setFormOpen(false)
               setFormEditing(null)
+              setFormGeometry('point')
             }}
             onSaved={(loc, warnings) => {
               setFormOpen(false)
               setFormEditing(null)
+              setFormGeometry('point')
               setNotice(
                 warnings.length > 0
                   ? `Saved “${loc.name}”. Attention: ${warnings.join(' · ')}`
@@ -273,10 +278,22 @@ export default function AdminApp() {
                 size="sm"
                 onClick={() => {
                   setFormEditing(null)
+                  setFormGeometry('point')
                   setFormOpen(true)
                 }}
               >
                 <Plus className="h-4 w-4" /> Add location
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setFormEditing(null)
+                  setFormGeometry('polyline')
+                  setFormOpen(true)
+                }}
+              >
+                <Route className="h-4 w-4" /> Record pathway
               </Button>
               <TabsList className="ml-auto">
                 <TabsTrigger value="locations" className="text-xs">Locations</TabsTrigger>
