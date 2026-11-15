@@ -181,6 +181,9 @@ export default function MapCore({
               lineCap: 'round',
             }}
           >
+            <Tooltip permanent direction="center" className="eksu-map-label eksu-path-label">
+              {l.name}
+            </Tooltip>
             <Tooltip sticky className="eksu-tip">
               {l.name} · {formatDistance(len)}
               {l.status === 'draft' ? ' · unverified' : ''}
@@ -205,6 +208,9 @@ export default function MapCore({
               fillOpacity: 0.22,
             }}
           >
+            <Tooltip permanent direction="center" className="eksu-map-label">
+              {l.name}
+            </Tooltip>
             <Tooltip sticky className="eksu-tip">
               {l.name}
               {l.status === 'draft' ? ' · unverified' : ''}
@@ -222,6 +228,9 @@ export default function MapCore({
           zIndexOffset={selectedId === l.id ? 1000 : 0}
           eventHandlers={{ click: () => handleFeatureClick(l.id) }}
         >
+          <Tooltip permanent direction="right" offset={[12, 0]} className="eksu-map-label">
+            {l.name}
+          </Tooltip>
           <Tooltip direction="top" offset={[0, -18]} className="eksu-tip">
             {l.name}
             {l.status === 'draft' ? ' · unverified' : ''}
