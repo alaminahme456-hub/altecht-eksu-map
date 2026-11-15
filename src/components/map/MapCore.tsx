@@ -7,7 +7,7 @@
  * coordinates — nothing is positioned arbitrarily.
  */
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
 import {
   MapContainer,
@@ -80,6 +80,77 @@ function ClickHandler({ onSelect }: { onSelect: (id: null) => void }) {
   return null
 }
 
+
+function escapeLabel(value: string) {
+  return value.replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[char]!)
+}
+
+/** Shows as many nearby place names as fit without covering one another. */
+function LocationLabels({
+  locations,
+  selectedId,
+}: {
+  locations: LocationDTO[]
+  selectedId: string | null
+}) {
+  const map = useMap()
+  const [visibleIds, setVisibleIds] = useState<string[]>([])
+
+  useEffect(() => {
+    const update = () => {
+      if (map.getZoom() < 16) {
+        setVisibleIds(selectedId ? [selectedId] : [])
+        return
+      }
+      const bounds = map.getBounds()
+      const candidates = locations
+        .filter((loc) => bounds.contains([loc.lat, loc.lng]))
+        .map((loc) => {
+          const point = map.latLngToContainerPoint([loc.lat, loc.lng])
+          const width = Math.min(190, Math.max(58, loc.name.length * 6.8 + 18))
+          return { id: loc.id, x: point.x + 20, y: point.y - 12, width, height: 26 }
+        })
+        .sort((a, b) => (a.id === selectedId ? -1 : b.id === selectedId ? 1 : 0))
+
+      const accepted: typeof candidates = []
+      for (const item of candidates) {
+        const overlaps = accepted.some((other) =>
+          item.x < other.x + other.width + 8 &&
+          item.x + item.width + 8 > other.x &&
+          item.y < other.y + other.height + 5 &&
+          item.y + item.height + 5 > other.y
+        )
+        if (!overlaps || item.id === selectedId) accepted.push(item)
+      }
+      setVisibleIds(accepted.map((item) => item.id))
+    }
+
+    update()
+    map.on('moveend zoomend', update)
+    return () => { map.off('moveend zoomend', update) }
+  }, [locations, map, selectedId])
+
+  return (
+    <>
+      {locations.filter((loc) => visibleIds.includes(loc.id)).map((loc) => (
+        <Marker
+          key={loc.id}
+          position={[loc.lat, loc.lng]}
+          interactive={false}
+          icon={L.divIcon({
+            className: 'eksu-location-label-icon',
+            html: `<span class="eksu-location-label">${escapeLabel(loc.name)}</span>`,
+            iconSize: [0, 0],
+            iconAnchor: [-20, 12],
+          })}
+        />
+      ))}
+    </>
+  )
+}
+
 function RouteViewport({ coordinates }: { coordinates: [number, number][] }) {
   const map = useMap()
   useEffect(() => {
@@ -148,6 +219,7 @@ export default function MapCore({
       <FlyController target={flyTarget} />
       <ClickHandler onSelect={onSelect} />
       <RouteViewport coordinates={routeCoordinates} />
+      <LocationLabels locations={points} selectedId={selectedId} />
 
       {/* Approximate campus envelope — orientation aid, NOT a surveyed boundary */}
       <Circle
@@ -181,9 +253,6 @@ export default function MapCore({
               lineCap: 'round',
             }}
           >
-            <Tooltip permanent direction="center" className="eksu-map-label eksu-path-label">
-              {l.name}
-            </Tooltip>
             <Tooltip sticky className="eksu-tip">
               {l.name} · {formatDistance(len)}
               {l.status === 'draft' ? ' · unverified' : ''}
@@ -208,9 +277,6 @@ export default function MapCore({
               fillOpacity: 0.22,
             }}
           >
-            <Tooltip permanent direction="center" className="eksu-map-label">
-              {l.name}
-            </Tooltip>
             <Tooltip sticky className="eksu-tip">
               {l.name}
               {l.status === 'draft' ? ' · unverified' : ''}
@@ -228,9 +294,6 @@ export default function MapCore({
           zIndexOffset={selectedId === l.id ? 1000 : 0}
           eventHandlers={{ click: () => handleFeatureClick(l.id) }}
         >
-          <Tooltip permanent direction="right" offset={[12, 0]} className="eksu-map-label">
-            {l.name}
-          </Tooltip>
           <Tooltip direction="top" offset={[0, -18]} className="eksu-tip">
             {l.name}
             {l.status === 'draft' ? ' · unverified' : ''}
