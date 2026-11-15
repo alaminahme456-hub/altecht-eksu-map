@@ -218,3 +218,26 @@
   border: 1px solid #e7e5e4;
   box-shadow: 0 1px 4px rgba(0,0,0,.2);
 }
+
+
+/* Collision-managed place labels */
+.leaflet-marker-icon.eksu-location-label-icon {
+  pointer-events: none;
+  overflow: visible;
+}
+.eksu-location-label {
+  display: inline-block;
+  max-width: 190px;
+  padding: 4px 8px;
+  border: 1px solid rgba(214, 211, 209, .95);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .96);
+  color: #292524;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .18);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
