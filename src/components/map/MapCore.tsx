@@ -42,6 +42,17 @@ export type MapCoreProps = {
 
 function markerIcon(loc: LocationDTO, selected: boolean): L.DivIcon {
   const meta = categoryMeta(loc.category)
+  const isWifi = loc.category === 'Smart School Wi-Fi'
+  if (isWifi) {
+    const statusColor = loc.wifiStatus === 'maintenance' ? '#d97706' : '#16a34a'
+    return L.divIcon({
+      className: '',
+      html: `<div class="eksu-wifi-marker${selected ? ' is-selected' : ''}" style="--wifi-marker-c:${statusColor}" title="${escapeLabel(loc.name)}"><span>📶</span></div>`,
+      iconSize: [20, 20],
+      // Keep the stored coordinates unchanged; visually place the small Wi-Fi marker beside its parent pin.
+      iconAnchor: [-10, 10],
+    })
+  }
   const cls = [
     'eksu-marker',
     loc.status === 'draft' ? 'is-draft' : '',
@@ -51,7 +62,7 @@ function markerIcon(loc: LocationDTO, selected: boolean): L.DivIcon {
     .join(' ')
   return L.divIcon({
     className: '',
-    html: `<div class="${cls}" style="--marker-c:${meta.color}" title="${loc.name.replace(/"/g, '&quot;')}"><span>${meta.icon}</span></div>`,
+    html: `<div class="${cls}" style="--marker-c:${meta.color}" title="${escapeLabel(loc.name)}"><span>${meta.icon}</span></div>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
   })
@@ -114,7 +125,7 @@ function LocationLabels({
       }
       const bounds = map.getBounds()
       const candidates = locations
-        .filter((loc) => bounds.contains([loc.lat, loc.lng]))
+        .filter((loc) => bounds.contains([loc.lat, loc.lng]) && (loc.category !== 'Smart School Wi-Fi' || loc.id === selectedId))
         .map((loc) => {
           const point = map.latLngToContainerPoint([loc.lat, loc.lng])
           const width = Math.min(190, Math.max(58, loc.name.length * 6.8 + 18))
