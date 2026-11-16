@@ -353,7 +353,7 @@ export default function CampusMapApp() {
       setShareBusy(false)
     }, (error) => {
       setShareError(error.code === error.PERMISSION_DENIED ? 'Allow location access to share your position.' : 'Could not get your current location. Try again.')
-      setShareUrl('')
+      setShareUrl('error')
       setShareBusy(false)
     }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 })
   }
