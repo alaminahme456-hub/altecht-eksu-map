@@ -22,6 +22,9 @@ export async function PATCH(req:NextRequest){
   if(b.wifiStatus!==undefined){if(!['available','maintenance'].includes(b.wifiStatus))return NextResponse.json({error:'Invalid Wi-Fi status'},{status:400});patch.wifiStatus=b.wifiStatus}
   const rows=await surveyRequest<any[]>('WifiCoverage',{id:`eq.${id}`},'PATCH',patch)
   if(!rows[0])return NextResponse.json({error:'Wi-Fi coverage record not found'},{status:404})
+  if(rows[0].locationId&&patch.wifiStatus){
+   await surveyRequest('Location',{id:`eq.${rows[0].locationId}`},'PATCH',{wifiStatus:patch.wifiStatus,updatedAt:new Date().toISOString()})
+  }
   return NextResponse.json({item:rows[0]})
  }catch(e){return NextResponse.json({error:e instanceof Error?e.message:'Could not update Wi-Fi record'},{status:500})}
 }
