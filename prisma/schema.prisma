@@ -23,8 +23,12 @@ model Location {
   status       String   @default("draft")
   source       String   @default("admin")
   externalId   String?
+  parentLocationId String?
+  wifiStatus String?
   // PostGIS spatial index column is maintained separately in SQL.
   spatial      Unsupported("geometry(Geometry, 4326)")?
+  parentLocation Location? @relation("LocationChildren", fields: [parentLocationId], references: [id], onDelete: SetNull)
+  childLocations Location[] @relation("LocationChildren")
   photos       Photo[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -32,6 +36,7 @@ model Location {
   @@index([category])
   @@index([status])
   @@index([name])
+  @@index([parentLocationId])
   @@map("Location")
 }
 
