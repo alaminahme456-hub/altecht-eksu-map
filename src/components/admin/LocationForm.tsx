@@ -39,14 +39,16 @@ export default function LocationForm({
   onSaved,
   onCancel,
   initialGeometry = 'point',
+  initialCategory,
 }: {
   editing: LocationDTO | null
   onSaved: (loc: LocationDTO, warnings: string[]) => void
   onCancel: () => void
   initialGeometry?: PickerMode
+  initialCategory?: string | null
 }) {
   const [name, setName] = useState(editing?.name ?? '')
-  const [category, setCategory] = useState<string>(editing?.category ?? (initialGeometry === 'polyline' ? 'Roads and pathways' : ''))
+  const [category, setCategory] = useState<string>(editing?.category ?? initialCategory ?? (initialGeometry === 'polyline' ? 'Roads and pathways' : ''))
   const [description, setDescription] = useState(editing?.description ?? '')
   const [geometryType, setGeometryType] = useState<PickerMode>(editing?.geometryType ?? initialGeometry)
   const [status, setStatus] = useState<'draft' | 'verified'>(editing?.status ?? 'draft')
@@ -245,7 +247,7 @@ export default function LocationForm({
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4 pb-24">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold">{editing ? `Edit: ${editing.name}` : 'Add a building or campus location'}</h2>
+        <h2 className="text-lg font-bold">{editing ? `Edit: ${editing.name}` : initialCategory === 'Smart School Wi-Fi' ? 'Add Smart School Wi-Fi access point' : 'Add a building or campus location'}</h2>
         <Button variant="ghost" size="sm" onClick={onCancel} type="button">
           <X className="h-4 w-4" /> Cancel
         </Button>
