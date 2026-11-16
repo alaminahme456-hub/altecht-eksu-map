@@ -632,7 +632,11 @@ export default function CampusMapApp() {
                     >
                       {categoryMeta(selected.category).icon} {selected.category}
                     </Badge>
-                    {selected.status === 'verified' ? (
+                    {selected.category === 'Smart School Wi-Fi' ? (
+                      <Badge className="gap-1 bg-amber-500 text-white hover:bg-amber-500">
+                        <TriangleAlert className="h-3 w-3" /> Building coordinate — approximate
+                      </Badge>
+                    ) : selected.status === 'verified' ? (
                       <Badge className="gap-1 bg-emerald-600 text-white hover:bg-emerald-600">
                         <ShieldCheck className="h-3 w-3" /> Verified GPS location
                       </Badge>
