@@ -241,3 +241,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+/* Compact Smart School Wi-Fi sublocation marker, visually offset beside its parent pin. */
+.eksu-wifi-marker {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  border-radius: 9999px;
+  background: var(--wifi-marker-c, #16a34a);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .38);
+  cursor: pointer;
+}
+.eksu-wifi-marker.is-selected {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
