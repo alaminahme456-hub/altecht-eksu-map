@@ -333,7 +333,6 @@ export default function CampusMapApp() {
         setUserPos(p)
         setLocating(false)
         setFlyTarget({ ...p, zoom: 17, key: Date.now() })
-        setShareAfterLocateOpen(true)
         const distanceFromCampusCenter = haversineMeters(
           p.lat,
           p.lng,
@@ -342,6 +341,9 @@ export default function CampusMapApp() {
         )
         if (distanceFromCampusCenter > campusVicinityRadiusMeters) {
           setGatePromptOpen(true)
+          setShareAfterLocateOpen(false)
+        } else {
+          setShareAfterLocateOpen(true)
         }
       },
       (err) => {
