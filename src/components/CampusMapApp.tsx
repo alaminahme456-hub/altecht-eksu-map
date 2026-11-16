@@ -78,6 +78,8 @@ export default function CampusMapApp() {
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [shareBusy, setShareBusy] = useState(false)
   const [shareError, setShareError] = useState<string | null>(null)
+  const [sharedLocation, setSharedLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [sharedLocationNotice, setSharedLocationNotice] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -94,6 +96,18 @@ export default function CampusMapApp() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // Shared-location links open this same EKSU map and focus the shared point.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const raw = params.get('sharedLocation')
+    if (!raw) return
+    const [lat, lng] = raw.split(',').map(Number)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return
+    setSharedLocation({ lat, lng })
+    setFlyTarget({ lat, lng, zoom: 18, key: Date.now() })
+    setSharedLocationNotice(true)
+  }, [])
 
   const filtered = useMemo(() => {
     return locations.filter((l) => {
@@ -347,7 +361,7 @@ export default function CampusMapApp() {
     navigator.geolocation.getCurrentPosition((pos) => {
       const lat = pos.coords.latitude
       const lng = pos.coords.longitude
-      const url = `https://www.google.com/maps?q=${lat},${lng}`
+      const url = `${window.location.origin}/?sharedLocation=${encodeURIComponent(`${lat},${lng}`)}`
       setUserPos({ lat, lng, accuracy: pos.coords.accuracy })
       setShareUrl(url)
       setShareBusy(false)
@@ -379,6 +393,7 @@ export default function CampusMapApp() {
     <div className="relative h-[100dvh] w-full overflow-hidden">
       <MapCore
         locations={filtered}
+        sharedLocation={sharedLocation}
         selectedId={selectedId}
         onSelect={(id) => {
           setSelectedId(id)
@@ -690,11 +705,18 @@ export default function CampusMapApp() {
         </DrawerContent>
       </Drawer>
 
+      <Dialog open={sharedLocationNotice} onOpenChange={setSharedLocationNotice}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader><DialogTitle>Shared location on EKSU Map</DialogTitle><DialogDescription>Someone shared this point with you. The orange marker shows the location on the ALTECH EKSU Campus Map.</DialogDescription></DialogHeader>
+          <Button onClick={() => setSharedLocationNotice(false)}>View on map</Button>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!shareUrl} onOpenChange={(open) => { if (!open) { setShareUrl(null); setShareError(null) } }}>
         <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader><DialogTitle>Share your location</DialogTitle><DialogDescription>Scan this QR code or share the link to show your current position.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>Share your location</DialogTitle><DialogDescription>Scan this QR code or share the link to open your position directly in the ALTECH EKSU Campus Map.</DialogDescription></DialogHeader>
           {shareError ? <p className="text-sm text-destructive">{shareError}</p> : shareUrl && <div className="space-y-3">
-            <div className="mx-auto flex w-fit rounded-xl border bg-white p-3"><img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(shareUrl)}`} alt="QR code for your current location" width="220" height="220" /></div>
+            <div className="mx-auto flex w-fit rounded-xl border bg-white p-3"><img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(shareUrl)}`} alt="QR code for your location on the EKSU campus map" width="220" height="220" /></div>
             <p className="break-all rounded-lg bg-muted p-2 text-xs">{shareUrl}</p>
             <div className="flex gap-2"><Button className="flex-1" onClick={() => void shareLocationLink()}><Share2 className="mr-2 h-4 w-4" />Share link</Button><Button variant="outline" onClick={() => void navigator.clipboard.writeText(shareUrl)}>Copy</Button></div>
           </div>}
