@@ -42,6 +42,7 @@ import type { LocationDTO, QualityReport } from '@/lib/types'
 import LocationForm from '@/components/admin/LocationForm'
 import QualityPanel from '@/components/admin/QualityPanel'
 import ImportExportPanel from '@/components/admin/ImportExportPanel'
+import WifiCoveragePanel from '@/components/admin/WifiCoveragePanel'
 
 export default function AdminApp() {
   const [authed, setAuthed] = useState<boolean | null>(null)
@@ -323,6 +324,7 @@ export default function AdminApp() {
                   )}
                 </TabsTrigger>
                 <TabsTrigger value="data" className="text-xs">Import / Export</TabsTrigger>
+                <TabsTrigger value="wifi" className="text-xs">Smart School Wi-Fi</TabsTrigger>
               </TabsList>
             </div>
 
@@ -446,6 +448,11 @@ export default function AdminApp() {
             {/* ------- Import / Export tab ------- */}
             <TabsContent value="data">
               <ImportExportPanel featureCount={locations.length} onChanged={() => { void loadLocations(); void loadQuality() }} />
+            </TabsContent>
+
+            {/* ------- Smart School Wi-Fi coverage ------- */}
+            <TabsContent value="wifi">
+              <WifiCoveragePanel />
             </TabsContent>
           </Tabs>
         )}
