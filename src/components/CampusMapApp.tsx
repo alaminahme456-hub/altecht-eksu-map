@@ -585,6 +585,8 @@ export default function CampusMapApp() {
             <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-dashed border-stone-500 bg-stone-50 text-[11px]">⚠️</span>
             <span>Unverified location — approximate, pending survey</span>
           </div>
+          <div className="flex items-center gap-2 py-0.5"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-700 text-[11px] text-white">📶</span><span>Smart School Wi-Fi sublocation</span></div>
+          <div className="flex items-center gap-2 py-0.5"><span className="h-2.5 w-2.5 rounded-full bg-teal-700"/><span>Wi-Fi available</span><span className="h-2.5 w-2.5 rounded-full bg-amber-600"/><span>Under maintenance</span></div>
           <Separator className="my-2" />
           <p className="mb-1 font-semibold">Categories</p>
           <div className="grid grid-cols-2 gap-x-2 gap-y-1">
