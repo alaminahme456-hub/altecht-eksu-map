@@ -26,6 +26,7 @@ import {
   Plus,
   Navigation,
   Search,
+  Share2,
   ShieldCheck,
   TriangleAlert,
   X,
@@ -74,6 +75,9 @@ export default function CampusMapApp() {
   const [showLegend, setShowLegend] = useState(false)
   const mapRef = useRef<L.Map | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [shareBusy, setShareBusy] = useState(false)
+  const [shareError, setShareError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -334,6 +338,34 @@ export default function CampusMapApp() {
       },
       { enableHighAccuracy: true, timeout: 12000 }
     )
+  }
+
+  const shareMyLocation = () => {
+    if (!navigator.geolocation) { setShareError('Location is not supported on this device.'); setShareUrl(''); return }
+    setShareBusy(true)
+    setShareError(null)
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const lat = pos.coords.latitude
+      const lng = pos.coords.longitude
+      const url = `https://www.google.com/maps?q=${lat},${lng}`
+      setUserPos({ lat, lng, accuracy: pos.coords.accuracy })
+      setShareUrl(url)
+      setShareBusy(false)
+    }, (error) => {
+      setShareError(error.code === error.PERMISSION_DENIED ? 'Allow location access to share your position.' : 'Could not get your current location. Try again.')
+      setShareUrl('')
+      setShareBusy(false)
+    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 })
+  }
+
+  const shareLocationLink = async () => {
+    if (!shareUrl) return
+    if (navigator.share) {
+      try { await navigator.share({ title: 'My location', text: 'Here is my current location.', url: shareUrl }) }
+      catch { /* User cancelled the share sheet. */ }
+    } else {
+      await navigator.clipboard.writeText(shareUrl)
+    }
   }
 
   const distanceFromUser =
@@ -653,6 +685,17 @@ export default function CampusMapApp() {
           )}
         </DrawerContent>
       </Drawer>
+
+      <Dialog open={!!shareUrl} onOpenChange={(open) => { if (!open) { setShareUrl(null); setShareError(null) } }}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader><DialogTitle>Share your location</DialogTitle><DialogDescription>Scan this QR code or share the link to show your current position.</DialogDescription></DialogHeader>
+          {shareError ? <p className="text-sm text-destructive">{shareError}</p> : shareUrl && <div className="space-y-3">
+            <div className="mx-auto flex w-fit rounded-xl border bg-white p-3"><img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(shareUrl)}`} alt="QR code for your current location" width="220" height="220" /></div>
+            <p className="break-all rounded-lg bg-muted p-2 text-xs">{shareUrl}</p>
+            <div className="flex gap-2"><Button className="flex-1" onClick={() => void shareLocationLink()}><Share2 className="mr-2 h-4 w-4" />Share link</Button><Button variant="outline" onClick={() => void navigator.clipboard.writeText(shareUrl)}>Copy</Button></div>
+          </div>}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={gatePromptOpen} onOpenChange={setGatePromptOpen}>
         <DialogContent className="max-w-sm rounded-2xl">
