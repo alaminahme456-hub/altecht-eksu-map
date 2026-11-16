@@ -19,6 +19,8 @@ export type LocationDTO = {
   status: LocationStatus
   source: string
   externalId?: string | null
+  parentLocationId?: string | null
+  wifiStatus?: 'available' | 'maintenance' | null
   photos: PhotoDTO[]
   createdAt: string
   updatedAt: string
@@ -64,6 +66,8 @@ export function serializeLocation(l: {
   status: string
   source: string
   externalId: string | null
+  parentLocationId?: string | null
+  wifiStatus?: string | null
   photos: { id: string; filename: string; caption: string | null }[]
   createdAt: Date
   updatedAt: Date
@@ -82,6 +86,8 @@ export function serializeLocation(l: {
     status: l.status as LocationStatus,
     source: l.source,
     externalId: l.externalId,
+    parentLocationId: l.parentLocationId ?? null,
+    wifiStatus: l.wifiStatus ?? null,
     photos: l.photos.map((p) => ({
       id: p.id,
       filename: p.filename,
