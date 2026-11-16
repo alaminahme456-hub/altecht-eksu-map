@@ -637,6 +637,11 @@ export default function CampusMapApp() {
                         <TriangleAlert className="h-3 w-3" /> Unverified — approximate
                       </Badge>
                     )}
+                    {selected.category === 'Smart School Wi-Fi' && (
+                      <Badge className={selected.wifiStatus === 'maintenance' ? 'bg-amber-600 text-white' : 'bg-teal-700 text-white'}>
+                        {selected.wifiStatus === 'maintenance' ? 'Under maintenance' : 'Available'}
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <Button
@@ -655,6 +660,22 @@ export default function CampusMapApp() {
 
               {selected.description && (
                 <p className="mt-3 text-sm leading-relaxed text-foreground/85">{selected.description}</p>
+              )}
+              {selected.parentLocationId && (
+                <p className="mt-2 text-xs text-muted-foreground">Sublocation of: {locations.find((loc) => loc.id === selected.parentLocationId)?.name ?? 'Campus facility'}</p>
+              )}
+              {locations.some((loc) => loc.parentLocationId === selected.id) && (
+                <div className="mt-3 rounded-xl border p-3">
+                  <p className="mb-2 text-sm font-semibold">Sublocations</p>
+                  <div className="space-y-2">
+                    {locations.filter((loc) => loc.parentLocationId === selected.id).map((child) => (
+                      <button key={child.id} type="button" onClick={() => selectLocation(child)} className="flex w-full items-center justify-between gap-2 rounded-lg bg-muted/60 p-2 text-left">
+                        <span className="min-w-0"><span className="block truncate text-sm font-medium">{child.name}</span><span className="block text-[11px] text-muted-foreground">📶 Smart School Wi-Fi</span></span>
+                        <Badge className={child.wifiStatus === 'maintenance' ? 'bg-amber-600 text-white' : 'bg-teal-700 text-white'}>{child.wifiStatus === 'maintenance' ? 'Maintenance' : 'Available'}</Badge>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {selected.photos.length > 0 && (
