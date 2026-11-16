@@ -50,6 +50,9 @@ export default function LocationForm({
   const [name, setName] = useState(editing?.name ?? '')
   const [category, setCategory] = useState<string>(editing?.category ?? initialCategory ?? (initialGeometry === 'polyline' ? 'Roads and pathways' : ''))
   const [description, setDescription] = useState(editing?.description ?? '')
+  const [parentLocationId, setParentLocationId] = useState(editing?.parentLocationId ?? '')
+  const [wifiStatus, setWifiStatus] = useState<'available' | 'maintenance'>(editing?.wifiStatus ?? 'available')
+  const [parentLocations, setParentLocations] = useState<LocationDTO[]>([])
   const [geometryType, setGeometryType] = useState<PickerMode>(editing?.geometryType ?? initialGeometry)
   const [status, setStatus] = useState<'draft' | 'verified'>(editing?.status ?? 'draft')
   const [latText, setLatText] = useState(editing ? String(editing.lat) : '')
@@ -76,6 +79,14 @@ export default function LocationForm({
     setRecording(false)
     setRecordingMessage('Recording paused. You can resume or save this pathway.')
   }
+
+  useEffect(() => {
+    if (category !== 'Smart School Wi-Fi') return
+    fetch('/api/locations', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data: { locations?: LocationDTO[] }) => setParentLocations((data.locations ?? []).filter((loc) => loc.geometryType === 'point' && loc.category !== 'Smart School Wi-Fi'))
+      .catch(() => setParentLocations([]))
+  }, [category])
 
   useEffect(() => () => {
     if (watchIdRef.current !== null && 'geolocation' in navigator) {
@@ -187,6 +198,7 @@ export default function LocationForm({
     setError(null)
     if (!name.trim()) return setError('Please enter the name of the building or location')
     if (!category) return setError('Please select a category')
+    if (category === 'Smart School Wi-Fi' && !parentLocationId) return setError('Choose the parent building for this Wi-Fi sublocation')
 
     let payload: Record<string, unknown>
     if (geometryType === 'point') {
@@ -196,7 +208,7 @@ export default function LocationForm({
       if (latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
         return setError('Coordinates out of range — latitude ±90, longitude ±180')
       }
-      payload = { name: name.trim(), category, description, lat: latNum, lng: lngNum, geometryType, status, coordinates: null }
+      payload = { name: name.trim(), category, description, lat: latNum, lng: lngNum, geometryType, status, coordinates: null, ...(category === 'Smart School Wi-Fi' ? { parentLocationId: parentLocationId || null, wifiStatus } : {}) }
     } else {
       const min = geometryType === 'polygon' ? 3 : 2
       if (vertices.length < min) {
@@ -212,6 +224,7 @@ export default function LocationForm({
         geometryType,
         coordinates: vertices,
         status,
+        ...(category === 'Smart School Wi-Fi' ? { parentLocationId: parentLocationId || null, wifiStatus } : {}),
       }
     }
 
@@ -288,6 +301,30 @@ export default function LocationForm({
             <Switch id="verified-switch" checked={status === 'verified'} onCheckedChange={(v) => setStatus(v ? 'verified' : 'draft')} />
           </div>
         </div>
+        {category === 'Smart School Wi-Fi' && (
+          <>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Parent building / facility *</Label>
+              <Select value={parentLocationId} onValueChange={setParentLocationId}>
+                <SelectTrigger><SelectValue placeholder="Choose the campus building this Wi-Fi belongs to" /></SelectTrigger>
+                <SelectContent>
+                  {parentLocations.map((loc) => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">This makes the Wi-Fi point a sublocation of the selected building. Blocks A, B and C of Faculty of Education must use one shared Wi-Fi entry.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Wi-Fi availability</Label>
+              <Select value={wifiStatus} onValueChange={(v) => setWifiStatus(v as 'available' | 'maintenance')}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="maintenance">Under maintenance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="loc-desc">Description</Label>
           <Textarea
