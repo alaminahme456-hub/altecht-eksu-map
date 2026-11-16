@@ -391,6 +391,10 @@ export default function CampusMapApp() {
         onMapReady={(m) => (mapRef.current = m)}
       />
 
+      <div className="pointer-events-none absolute bottom-3 left-3 z-[500] rounded-md border border-white/70 bg-white/80 px-2.5 py-1.5 text-[10px] font-semibold tracking-wide text-stone-700 shadow-sm backdrop-blur">
+        MADE BY <span className="font-extrabold text-stone-950">ALTECH</span>
+      </div>
+
       {/* ---------- Top bar: title + search ---------- */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="pointer-events-auto mx-auto flex max-w-xl items-center gap-2 rounded-xl border bg-white/95 p-2 shadow-md backdrop-blur">
