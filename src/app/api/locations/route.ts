@@ -82,6 +82,8 @@ export async function POST(req: NextRequest) {
       status: input.status,
       source: 'admin',
       externalId: input.externalId ?? null,
+      parentLocationId: input.parentLocationId ?? null,
+      wifiStatus: input.wifiStatus ?? null,
     },
     include: { photos: true },
   })
