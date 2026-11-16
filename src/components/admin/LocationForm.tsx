@@ -84,7 +84,7 @@ export default function LocationForm({
     if (category !== 'Smart School Wi-Fi') return
     fetch('/api/locations', { cache: 'no-store' })
       .then((res) => res.json())
-      .then((data: { locations?: LocationDTO[] }) => setParentLocations((data.locations ?? []).filter((loc) => loc.geometryType === 'point' && loc.category !== 'Smart School Wi-Fi'))
+      .then((data: { locations?: LocationDTO[] }) => setParentLocations((data.locations ?? []).filter((loc) => loc.geometryType === 'point' && loc.category !== 'Smart School Wi-Fi')))
       .catch(() => setParentLocations([]))
   }, [category])
 
