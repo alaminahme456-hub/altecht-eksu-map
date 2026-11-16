@@ -64,6 +64,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         coordinates: input.coordinates ? JSON.stringify(input.coordinates) : null,
         status: input.status,
         externalId: input.externalId ?? null,
+        parentLocationId: input.parentLocationId ?? null,
+        wifiStatus: input.wifiStatus ?? null,
       },
       include: { photos: true },
     })
