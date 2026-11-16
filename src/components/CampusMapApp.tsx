@@ -179,8 +179,11 @@ export default function CampusMapApp() {
     return points
   }
 
-  const buildRoute = async (destination: LocationDTO) => {
-    let origin = userPos
+  const buildRoute = async (
+    destination: LocationDTO,
+    originOverride?: { lat: number; lng: number; accuracy?: number }
+  ) => {
+    let origin = originOverride ?? userPos
     setRouteError(null)
     if (!origin) {
       if (!navigator.geolocation) { setRouteError('Location is not supported on this device.'); return }
@@ -202,6 +205,11 @@ export default function CampusMapApp() {
       if (recordedRoute) {
         setRouteCoordinates(recordedRoute.coordinates)
         setRouteSummary({ distance: recordedRoute.distance, duration: recordedRoute.distance / 1.25 })
+        routeCoordinatesRef.current = recordedRoute.coordinates
+        reroutingRef.current = false
+        lastOffRouteAlertRef.current = 0
+        setNavigationDestination(destination)
+        setNavigationStatus('active')
         setFlyTarget({ lat: destination.lat, lng: destination.lng, zoom: 18, key: Date.now() })
         setSelectedId(destination.id)
         setSheetOpen(false)
@@ -220,7 +228,12 @@ export default function CampusMapApp() {
       const route = decodePolyline6(leg.shape)
       if (route.length < 2) throw new Error('The walking route could not be drawn.')
       setRouteCoordinates(route)
+      routeCoordinatesRef.current = route
       setRouteSummary({ distance: Number(data.trip.summary.length) * 1000, duration: Number(data.trip.summary.time) })
+      reroutingRef.current = false
+      lastOffRouteAlertRef.current = 0
+      setNavigationDestination(destination)
+      setNavigationStatus('active')
       setFlyTarget({ lat: destination.lat, lng: destination.lng, zoom: 18, key: Date.now() })
       setSelectedId(destination.id)
       setSheetOpen(false)
