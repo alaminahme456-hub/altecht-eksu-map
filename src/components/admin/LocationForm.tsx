@@ -339,6 +339,7 @@ export default function LocationForm({
 
       {/* --- Geometry --- */}
       <div className="space-y-3 rounded-xl border bg-card p-4">
+        {category === 'Smart School Wi-Fi' && <div className="rounded-lg border border-teal-200 bg-teal-50 p-3 text-xs text-teal-950">Pin the actual Wi-Fi access-point location, not just the centre of its parent building. Keep the record unverified until its position is checked on campus. Faculty of Education Blocks A, B and C must share one combined Wi-Fi entry.</div>}
         <Label>How is this feature mapped? *</Label>
         <RadioGroup
           value={geometryType}
