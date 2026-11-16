@@ -36,6 +36,7 @@ import { EKSU_CAMPUS_CENTER, formatDistance, haversineMeters, pathLengthMeters }
 import type { LocationDTO } from '@/lib/types'
 import { routeOnRecordedPaths } from '@/lib/path-routing'
 import type { FlyTarget, MapCoreProps } from '@/components/map/MapCore'
+import SurveyPanel from '@/components/map/SurveyPanel'
 
 const MapCore = dynamic(() => import('@/components/map/MapCore'), {
   ssr: false,
@@ -570,7 +571,7 @@ export default function CampusMapApp() {
 
       {/* ---------- Legend ---------- */}
       {showLegend && (
-        <div className="absolute bottom-3 left-3 z-[1000] w-72 max-w-[86%] rounded-xl border bg-white/97 p-3 text-xs shadow-xl">
+        <div className="absolute bottom-3 left-3 z-[1000] w-80 max-w-[90%] max-h-[78dvh] overflow-y-auto rounded-xl border bg-white/97 p-3 text-xs shadow-xl">
           <div className="mb-2 flex items-center justify-between">
             <p className="font-bold">Map legend</p>
             <button onClick={() => setShowLegend(false)} aria-label="Close legend">
@@ -600,6 +601,7 @@ export default function CampusMapApp() {
               </span>
             ))}
           </div>
+          <SurveyPanel />
           <Separator className="my-2" />
           <p className="text-[10px] leading-snug text-muted-foreground">
             Map anchor: EKSU main campus 7.712°N 5.251°E (public record). Dashed grey circle is an
