@@ -66,6 +66,11 @@ export default function CampusMapApp() {
   const [routeSummary, setRouteSummary] = useState<{ distance: number; duration: number } | null>(null)
   const [routeLoading, setRouteLoading] = useState(false)
   const [routeError, setRouteError] = useState<string | null>(null)
+  const [navigationDestination, setNavigationDestination] = useState<LocationDTO | null>(null)
+  const [navigationStatus, setNavigationStatus] = useState<'active' | 'rerouting' | null>(null)
+  const routeCoordinatesRef = useRef<[number, number][]>([])
+  const reroutingRef = useRef(false)
+  const lastOffRouteAlertRef = useRef(0)
   const [showLegend, setShowLegend] = useState(false)
   const mapRef = useRef<L.Map | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -204,6 +209,90 @@ export default function CampusMapApp() {
     } catch (error) {
       setRouteError(error instanceof Error ? error.message : 'Could not calculate a walking route.')
     } finally { setRouteLoading(false) }
+  }
+
+
+  routeCoordinatesRef.current = routeCoordinates
+
+  const speakNavigation = (message: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+    window.speechSynthesis.cancel()
+    const speech = new SpeechSynthesisUtterance(message)
+    speech.lang = 'en-NG'
+    speech.rate = 0.95
+    window.speechSynthesis.speak(speech)
+  }
+
+  const distanceToRouteMeters = (point: { lat: number; lng: number }, route: [number, number][]) => {
+    if (route.length < 2) return Infinity
+    const sx = 111320 * Math.cos(point.lat * Math.PI / 180)
+    const sy = 110540
+    let min = Infinity
+    for (let i = 1; i < route.length; i++) {
+      const ax = (route[i - 1][1] - point.lng) * sx
+      const ay = (route[i - 1][0] - point.lat) * sy
+      const bx = (route[i][1] - point.lng) * sx
+      const by = (route[i][0] - point.lat) * sy
+      const dx = bx - ax, dy = by - ay
+      const t = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / (dx * dx + dy * dy || 1)))
+      min = Math.min(min, Math.hypot(ax + t * dx, ay + t * dy))
+    }
+    return min
+  }
+
+  useEffect(() => {
+    if (!navigationDestination || !navigator.geolocation) {
+      setNavigationStatus(null)
+      return
+    }
+    const destination = navigationDestination
+    const watchId = navigator.geolocation.watchPosition((position) => {
+      const current = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      }
+      setUserPos(current)
+      // Ignore noisy fixes so a weak GPS signal does not trigger false reroutes.
+      if (current.accuracy > 35) return
+
+      const remaining = haversineMeters(current.lat, current.lng, destination.lat, destination.lng)
+      if (remaining <= 18) {
+        setNavigationDestination(null)
+        setNavigationStatus(null)
+        setRouteCoordinates([])
+        setRouteSummary(null)
+        speakNavigation('You have arrived at your destination.')
+        return
+      }
+
+      const offRouteBy = distanceToRouteMeters(current, routeCoordinatesRef.current)
+      if (offRouteBy > 35 && !reroutingRef.current) {
+        const now = Date.now()
+        if (now - lastOffRouteAlertRef.current < 12000) return
+        lastOffRouteAlertRef.current = now
+        reroutingRef.current = true
+        setNavigationStatus('rerouting')
+        speakNavigation('You are off route. Recalculating.')
+        void buildRoute(destination, current).finally(() => {
+          reroutingRef.current = false
+          setNavigationStatus('active')
+        })
+      }
+    }, () => {
+      setGeoError('Live GPS signal was interrupted. Check that location is enabled.')
+    }, { enableHighAccuracy: true, maximumAge: 1500, timeout: 12000 })
+
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [navigationDestination])
+
+  const stopNavigation = () => {
+    setNavigationDestination(null)
+    setNavigationStatus(null)
+    setRouteCoordinates([])
+    setRouteSummary(null)
+    reroutingRef.current = false
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
   }
 
   const openGateDirections = (gate: LocationDTO) => { void buildRoute(gate) }
@@ -403,7 +492,13 @@ export default function CampusMapApp() {
       </div>
 
       {routeSummary && routeCoordinates.length > 1 && (
-        <div className="absolute inset-x-0 top-[7.5rem] z-[1000] mx-auto w-fit max-w-[92%]"><div className="flex items-center gap-2 rounded-full border bg-white/95 px-4 py-2 text-xs font-semibold shadow-lg"><Navigation className="h-4 w-4 text-primary" /> Walking route · {formatDistance(routeSummary.distance)} · {Math.max(1, Math.round(routeSummary.duration / 60))} min <button onClick={() => { setRouteCoordinates([]); setRouteSummary(null) }} aria-label="Clear route"><X className="h-4 w-4" /></button></div></div>
+        <div className="absolute inset-x-0 top-[7.5rem] z-[1000] mx-auto w-fit max-w-[92%]">
+          <div className="flex items-center gap-2 rounded-full border bg-white/95 px-4 py-2 text-xs font-semibold shadow-lg">
+            <Navigation className="h-4 w-4 text-primary" />
+            {navigationStatus === 'rerouting' ? 'Recalculating route…' : navigationDestination ? `Navigating to ${navigationDestination.name}` : 'Walking route'} · {formatDistance(routeSummary.distance)} · {Math.max(1, Math.round(routeSummary.duration / 60))} min
+            <button onClick={stopNavigation} aria-label="Stop navigation" className="ml-1"><X className="h-4 w-4" /></button>
+          </div>
+        </div>
       )}
 
       {(geoError || routeError) && (
