@@ -60,6 +60,7 @@ export default function AdminApp() {
   const [formEditing, setFormEditing] = useState<LocationDTO | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [formGeometry, setFormGeometry] = useState<'point' | 'polyline'>('point')
+  const [formInitialCategory, setFormInitialCategory] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<LocationDTO | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
@@ -253,15 +254,18 @@ export default function AdminApp() {
           <LocationForm
             editing={formEditing}
             initialGeometry={formGeometry}
+            initialCategory={formInitialCategory}
             onCancel={() => {
               setFormOpen(false)
               setFormEditing(null)
               setFormGeometry('point')
+              setFormInitialCategory(null)
             }}
             onSaved={(loc, warnings) => {
               setFormOpen(false)
               setFormEditing(null)
               setFormGeometry('point')
+              setFormInitialCategory(null)
               setNotice(
                 warnings.length > 0
                   ? `Saved “${loc.name}”. Attention: ${warnings.join(' · ')}`
@@ -279,10 +283,23 @@ export default function AdminApp() {
                 onClick={() => {
                   setFormEditing(null)
                   setFormGeometry('point')
+                  setFormInitialCategory(null)
                   setFormOpen(true)
                 }}
               >
                 <Plus className="h-4 w-4" /> Add location
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setFormEditing(null)
+                  setFormGeometry('point')
+                  setFormInitialCategory('Smart School Wi-Fi')
+                  setFormOpen(true)
+                }}
+              >
+                <span aria-hidden="true">📶</span> Add Smart School Wi-Fi
               </Button>
               <Button
                 size="sm"
