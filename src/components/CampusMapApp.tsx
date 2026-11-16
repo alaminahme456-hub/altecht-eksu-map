@@ -80,6 +80,7 @@ export default function CampusMapApp() {
   const [shareError, setShareError] = useState<string | null>(null)
   const [sharedLocation, setSharedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [sharedLocationNotice, setSharedLocationNotice] = useState(false)
+  const [shareAfterLocateOpen, setShareAfterLocateOpen] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -332,6 +333,7 @@ export default function CampusMapApp() {
         setUserPos(p)
         setLocating(false)
         setFlyTarget({ ...p, zoom: 17, key: Date.now() })
+        setShareAfterLocateOpen(true)
         const distanceFromCampusCenter = haversineMeters(
           p.lat,
           p.lng,
@@ -352,6 +354,14 @@ export default function CampusMapApp() {
       },
       { enableHighAccuracy: true, timeout: 12000 }
     )
+  }
+
+  const shareLocatedPosition = () => {
+    if (!userPos) { shareMyLocation(); return }
+    const url = `${window.location.origin}/?sharedLocation=${encodeURIComponent(`${userPos.lat},${userPos.lng}`)}`
+    setShareUrl(url)
+    setShareError(null)
+    setShareAfterLocateOpen(false)
   }
 
   const shareMyLocation = () => {
@@ -704,6 +714,19 @@ export default function CampusMapApp() {
           )}
         </DrawerContent>
       </Drawer>
+
+      <Dialog open={shareAfterLocateOpen} onOpenChange={setShareAfterLocateOpen}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Share your location?</DialogTitle>
+            <DialogDescription>Your current position is now shown on the EKSU map. Would you like to share this location with someone using an ALTECH EKSU Map link?</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setShareAfterLocateOpen(false)}>No, thanks</Button>
+            <Button className="flex-1" onClick={shareLocatedPosition}><Share2 className="mr-2 h-4 w-4" />Yes, share</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={sharedLocationNotice} onOpenChange={setSharedLocationNotice}>
         <DialogContent className="max-w-sm rounded-2xl">
