@@ -15,6 +15,8 @@ export const locationInputSchema = z.object({
   coordinates: z.array(z.tuple([z.number(), z.number()])).min(2).optional().nullable(),
   status: statusSchema.default('draft'),
   externalId: z.string().max(100).optional().nullable(),
+  parentLocationId: z.string().max(100).optional().nullable(),
+  wifiStatus: z.enum(['available', 'maintenance']).optional().nullable(),
 })
 
 export type LocationInput = z.infer<typeof locationInputSchema>
