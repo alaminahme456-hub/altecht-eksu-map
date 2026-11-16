@@ -33,6 +33,7 @@ export type MapCoreProps = {
   selectedId: string | null
   onSelect: (id: string | null) => void
   userPos: UserPos
+  sharedLocation: { lat: number; lng: number } | null
   routeCoordinates: [number, number][]
   basemap: 'illustrated' | 'osm'
   flyTarget: FlyTarget
@@ -55,6 +56,13 @@ function markerIcon(loc: LocationDTO, selected: boolean): L.DivIcon {
     iconAnchor: [17, 17],
   })
 }
+
+const sharedLocationIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:24px;height:24px;border:3px solid white;border-radius:50%;background:#f97316;box-shadow:0 1px 8px #0008;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:800">★</div>',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+})
 
 const userIcon = L.divIcon({
   className: '',
@@ -166,6 +174,7 @@ export default function MapCore({
   selectedId,
   onSelect,
   userPos,
+  sharedLocation,
   routeCoordinates,
   basemap,
   flyTarget,
@@ -300,6 +309,13 @@ export default function MapCore({
           </Tooltip>
         </Marker>
       ))}
+
+      {/* Location shared through an ALTECH EKSU Map link */}
+      {sharedLocation && (
+        <Marker position={[sharedLocation.lat, sharedLocation.lng]} icon={sharedLocationIcon} interactive={false}>
+          <Tooltip direction="top" offset={[0, -12]} permanent className="eksu-tip">Shared location</Tooltip>
+        </Marker>
+      )}
 
       {/* User location */}
       {userPos && (
