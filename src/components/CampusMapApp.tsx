@@ -469,7 +469,7 @@ export default function CampusMapApp() {
               <span className="block text-[10px] font-medium text-muted-foreground">Campus Map</span>
             </span>
           </div>
-          <div className="relative flex-1">
+          <div className="relative z-[1101] flex-1">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
@@ -525,7 +525,7 @@ export default function CampusMapApp() {
         </div>
 
         {/* ---------- Category filter chips ---------- */}
-        <div className="pointer-events-auto chip-scroll mx-auto mt-2 flex max-w-xl gap-1.5 pb-1">
+        <div className="pointer-events-auto chip-scroll relative z-0 mx-auto mt-2 flex max-w-xl gap-1.5 pb-1">
           <button
             onClick={() => setActiveCategories(new Set())}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur ${
