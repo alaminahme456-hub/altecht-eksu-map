@@ -5,12 +5,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { MessageCircle, Send, Users, Eye, EyeOff, Trash2, X } from 'lucide-react'
+import { MessageCircle, Send, Users, Eye, EyeOff, Trash2 } from 'lucide-react'
 import SurveyPanel from '@/components/map/SurveyPanel'
 import ExpandableActionButton from '@/components/ui/expandable-action-button'
 
 type GeneralComment = { id: string; body: string; isVisible: boolean; createdAt: string }
-type SurveyPreview = { id: string; question: string }
 
 export default function CommunityPanel() {
   const [open, setOpen] = useState(false)
@@ -19,8 +18,6 @@ export default function CommunityPanel() {
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [survey, setSurvey] = useState<SurveyPreview | null>(null)
-  const [announcementDismissed, setAnnouncementDismissed] = useState(false)
 
   const refreshComments = useCallback(async () => {
     try {
@@ -36,12 +33,6 @@ export default function CommunityPanel() {
 
   useEffect(() => {
     void refreshComments()
-    fetch('/api/surveys', { cache: 'no-store' })
-      .then(async (response) => {
-        const data = await response.json()
-        if (response.ok) setSurvey((data.surveys || []).find((item: any) => item.status === 'active') || null)
-      })
-      .catch(() => {})
   }, [refreshComments])
 
   const submitComment = async () => {
@@ -91,24 +82,6 @@ export default function CommunityPanel() {
 
   return (
     <>
-      {survey && !announcementDismissed && (
-        <div className="absolute bottom-20 left-3 z-[1000] w-[min(21rem,calc(100%-6rem))] rounded-xl border bg-white/95 p-3 shadow-lg backdrop-blur">
-          <div className="flex items-start gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="mb-1 flex items-center gap-1.5">
-                <Badge className="bg-emerald-700 text-white hover:bg-emerald-700">Campus survey</Badge>
-                <span className="text-[10px] text-muted-foreground">Have your say</span>
-              </div>
-              <p className="line-clamp-2 text-xs font-semibold">{survey.question}</p>
-              <Button size="sm" className="mt-2 h-8" onClick={() => setOpen(true)}>Vote or comment</Button>
-            </div>
-            <button onClick={() => setAnnouncementDismissed(true)} aria-label="Dismiss survey announcement" className="rounded p-1 text-muted-foreground hover:bg-muted">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="relative">
         <ExpandableActionButton
           icon={<Users className="h-4 w-4" />}
