@@ -23,7 +23,7 @@ export default function ExpandableActionButton({
   className,
   variant = 'outline',
   size = 'sm',
-  autoCollapseMs = 10000,
+  autoCollapseMs = 4000,
 }: ExpandableActionButtonProps) {
   const [expanded, setExpanded] = useState(true)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -64,7 +64,7 @@ export default function ExpandableActionButton({
       onFocus={expand}
       onBlur={collapseLater}
       className={cn(
-        'group inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 overflow-hidden rounded-full border bg-white/95 px-0 shadow-md backdrop-blur transition-[width,padding,background-color,color,border-radius] duration-300 ease-out hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/50',
+        'group inline-flex h-10 w-10 shrink-0 self-end origin-right items-center justify-center gap-2 overflow-hidden rounded-full border bg-white/95 px-0 shadow-md backdrop-blur transition-[width,padding,background-color,color,border-radius] duration-300 ease-out hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/50',
         expanded && 'w-auto min-w-10 rounded-full px-3',
         active && 'border-stone-900 bg-stone-900 text-white hover:bg-stone-800',
         className,
