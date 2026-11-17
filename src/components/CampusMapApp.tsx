@@ -479,7 +479,7 @@ export default function CampusMapApp() {
               aria-label="Search campus locations"
             />
             {searchResults.length > 0 && (
-              <div className="absolute inset-x-0 top-11 overflow-hidden rounded-lg border bg-white shadow-lg">
+              <div className="absolute inset-x-0 top-11 z-50 overflow-hidden rounded-lg border bg-white shadow-lg">
                 <ScrollArea className="max-h-64">
                   {searchResults.map((l) => {
                     const meta = categoryMeta(l.category)
