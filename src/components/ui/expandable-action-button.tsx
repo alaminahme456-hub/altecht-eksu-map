@@ -39,9 +39,26 @@ export default function ExpandableActionButton({
     collapseLater()
   }, [collapseLater])
 
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current)
-  }, [])
+  useEffect(() => {
+    // Show labels briefly on initial load, then return to icon-only controls.
+    collapseLater()
+    const collapseOnInteraction = () => {
+      if (timer.current) clearTimeout(timer.current)
+      setExpanded(false)
+    }
+    // Any screen touch/click, map gesture, zoom/scroll, or keyboard action hides labels.
+    document.addEventListener('pointerdown', collapseOnInteraction, true)
+    document.addEventListener('touchstart', collapseOnInteraction, true)
+    document.addEventListener('wheel', collapseOnInteraction, { capture: true, passive: true })
+    document.addEventListener('keydown', collapseOnInteraction, true)
+    return () => {
+      if (timer.current) clearTimeout(timer.current)
+      document.removeEventListener('pointerdown', collapseOnInteraction, true)
+      document.removeEventListener('touchstart', collapseOnInteraction, true)
+      document.removeEventListener('wheel', collapseOnInteraction, true)
+      document.removeEventListener('keydown', collapseOnInteraction, true)
+    }
+  }, [collapseLater])
 
   return (
     <Button
@@ -51,10 +68,7 @@ export default function ExpandableActionButton({
       title={label}
       aria-label={label}
       aria-expanded={expanded}
-      onClick={() => {
-        expand()
-        onClick()
-      }}
+      onClick={onClick}
       onPointerEnter={(event) => {
         if (event.pointerType === 'mouse') expand()
       }}
