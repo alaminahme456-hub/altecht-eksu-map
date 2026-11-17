@@ -308,55 +308,59 @@ export default function AdminApp() {
           />
         ) : (
           <Tabs defaultValue="locations" className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                size="sm"
-                onClick={() => {
-                  setFormEditing(null)
-                  setFormGeometry('point')
-                  setFormInitialCategory(null)
-                  setFormOpen(true)
-                }}
-              >
-                <Plus className="h-4 w-4" /> Add location
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setFormEditing(null)
-                  setFormGeometry('point')
-                  setFormInitialCategory('Smart School Wi-Fi')
-                  setFormOpen(true)
-                }}
-              >
-                <span aria-hidden="true">📶</span> Add Smart School Wi-Fi
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setFormEditing(null)
-                  setFormGeometry('polyline')
-                  setFormOpen(true)
-                }}
-              >
-                <Route className="h-4 w-4" /> Record pathway
-              </Button>
-              <TabsList className="ml-auto">
-                <TabsTrigger value="locations" className="text-xs">Locations</TabsTrigger>
-                <TabsTrigger value="quality" className="text-xs">
-                  Data quality
-                  {quality && quality.duplicates.length + quality.suspicious.length > 0 && (
-                    <Badge variant="destructive" className="ml-1.5 h-4 px-1 text-[9px]">
-                      {quality.duplicates.length + quality.suspicious.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="data" className="text-xs">Import / Export</TabsTrigger>
-                <TabsTrigger value="wifi" className="text-xs">Smart School Wi-Fi</TabsTrigger>
-                <TabsTrigger value="visitors" className="text-xs">Visitors</TabsTrigger>
-              </TabsList>
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setFormEditing(null)
+                    setFormGeometry('point')
+                    setFormInitialCategory(null)
+                    setFormOpen(true)
+                  }}
+                >
+                  <Plus className="h-4 w-4" /> Add location
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setFormEditing(null)
+                    setFormGeometry('point')
+                    setFormInitialCategory('Smart School Wi-Fi')
+                    setFormOpen(true)
+                  }}
+                >
+                  <span aria-hidden="true">📶</span> Add Smart School Wi-Fi
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setFormEditing(null)
+                    setFormGeometry('polyline')
+                    setFormOpen(true)
+                  }}
+                >
+                  <Route className="h-4 w-4" /> Record pathway
+                </Button>
+              </div>
+              <div className="w-full overflow-x-auto overscroll-x-contain pb-1">
+                <TabsList className="flex h-auto w-max min-w-full flex-nowrap justify-start gap-1">
+                  <TabsTrigger value="locations" className="shrink-0 whitespace-nowrap text-xs">Locations</TabsTrigger>
+                  <TabsTrigger value="quality" className="shrink-0 whitespace-nowrap text-xs">
+                    Data quality
+                    {quality && quality.duplicates.length + quality.suspicious.length > 0 && (
+                      <Badge variant="destructive" className="ml-1.5 h-4 px-1 text-[9px]">
+                        {quality.duplicates.length + quality.suspicious.length}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="data" className="shrink-0 whitespace-nowrap text-xs">Import / Export</TabsTrigger>
+                  <TabsTrigger value="wifi" className="shrink-0 whitespace-nowrap text-xs">Smart School Wi-Fi</TabsTrigger>
+                  <TabsTrigger value="visitors" className="shrink-0 whitespace-nowrap text-xs">Visitors</TabsTrigger>
+                </TabsList>
+              </div>
             </div>
 
             {/* ------- Locations tab ------- */}
