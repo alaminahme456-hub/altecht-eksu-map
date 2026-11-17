@@ -39,6 +39,7 @@ import type { FlyTarget, MapCoreProps } from '@/components/map/MapCore'
 import SurveyPanel from '@/components/map/SurveyPanel'
 import CommunityPanel from '@/components/map/CommunityPanel'
 import ExpandableActionButton from '@/components/ui/expandable-action-button'
+import MapBackHandler from '@/components/map/MapBackHandler'
 
 const MapCore = dynamic(() => import('@/components/map/MapCore'), {
   ssr: false,
@@ -424,6 +425,21 @@ export default function CampusMapApp() {
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden">
+      <MapBackHandler onBack={() => {
+        setSheetOpen(false)
+        setSelectedId(null)
+        setShowLegend(false)
+        setDirectionPickerOpen(false)
+        setGatePickerOpen(false)
+        setGatePromptOpen(false)
+        setShareAfterLocateOpen(false)
+        setSharedLocationNotice(false)
+        setShareUrl(null)
+        setShareError(null)
+        setQuery('')
+        stopNavigation()
+        setFlyTarget({ ...EKSU_CAMPUS_CENTER, zoom: 16, key: Date.now() })
+      }} />
       <MapCore
         locations={filtered}
         sharedLocation={sharedLocation}
