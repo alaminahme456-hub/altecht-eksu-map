@@ -27,22 +27,39 @@ export default function ImportExportPanel({
   const [pendingGeojson, setPendingGeojson] = useState<string | null>(null)
   const [pendingName, setPendingName] = useState('')
   const [force, setForce] = useState(false)
-  const [busy, setBusy] = useState<'dry' | 'import' | 'sample' | 'remove' | null>(null)
+  const [busy, setBusy] = useState<'export' | 'dry' | 'import' | 'sample' | 'remove' | null>(null)
   const [preview, setPreview] = useState<ImportReport | null>(null)
   const [finalReport, setFinalReport] = useState<ImportReport | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
   const exportGeojson = async () => {
-    const res = await fetch('/api/geojson')
-    const blob = await res.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `eksu-campus-data-${new Date().toISOString().slice(0, 10)}.geojson`
-    a.click()
-    URL.revokeObjectURL(url)
-    setNotice('GeoJSON export downloaded — original coordinates preserved.')
+    if (busy !== null) return
+    setBusy('export')
+    setError(null)
+    setNotice(null)
+    try {
+      const res = await fetch('/api/geojson', { cache: 'no-store' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || `Export failed (HTTP ${res.status}).`)
+      }
+      const blob = await res.blob()
+      if (blob.size === 0) throw new Error('The export was empty. No file was downloaded.')
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `eksu-campus-data-${new Date().toISOString().slice(0, 10)}.geojson`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setNotice('GeoJSON export downloaded — original coordinates preserved.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not export campus data.')
+    } finally {
+      setBusy(null)
+    }
   }
 
   const onPickFile = async (file: File) => {
@@ -111,6 +128,7 @@ export default function ImportExportPanel({
   }
 
   const removeSamples = async () => {
+    if (!window.confirm('Remove all sample records from the campus map? Real campus records will not be deleted.')) return
     setBusy('remove')
     setError(null)
     try {
@@ -140,8 +158,8 @@ export default function ImportExportPanel({
             Downloads all {featureCount} records as a WGS84 GeoJSON FeatureCollection with photos,
             verification status and source metadata. Coordinates are written exactly as collected.
           </p>
-          <Button size="sm" onClick={exportGeojson}>
-            <Download className="h-4 w-4" /> Download eksu-campus-data.geojson
+          <Button size="sm" onClick={() => void exportGeojson()} disabled={busy !== null}>
+            {busy === 'export' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} {busy === 'export' ? 'Preparing export…' : 'Download eksu-campus-data.geojson'}
           </Button>
         </CardContent>
       </Card>
