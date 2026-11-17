@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 /**
  * Keeps a lightweight history entry while the campus map is open.
@@ -8,6 +8,9 @@ import { useEffect } from 'react'
  * of navigating away from the app.
  */
 export default function MapBackHandler({ onBack }: { onBack: () => void }) {
+  const onBackRef = useRef(onBack)
+  onBackRef.current = onBack
+
   useEffect(() => {
     const pushMapEntry = () => {
       window.history.pushState({ eksuMapRoot: true }, '', window.location.href)
@@ -16,14 +19,14 @@ export default function MapBackHandler({ onBack }: { onBack: () => void }) {
     pushMapEntry()
 
     const handlePopState = () => {
-      onBack()
+      onBackRef.current()
       // Keep the map as the active page after handling the device Back action.
       pushMapEntry()
     }
 
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [onBack])
+  }, [])
 
   return null
 }
