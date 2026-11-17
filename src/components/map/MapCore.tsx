@@ -7,7 +7,7 @@
  * coordinates — nothing is positioned arbitrarily.
  */
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
 import {
   MapContainer,
@@ -35,6 +35,7 @@ export type MapCoreProps = {
   userPos: UserPos
   sharedLocation: { lat: number; lng: number } | null
   routeCoordinates: [number, number][]
+  navigationActive: boolean
   basemap: 'illustrated' | 'osm'
   flyTarget: FlyTarget
   onMapReady?: (map: L.Map) => void
@@ -170,13 +171,30 @@ function LocationLabels({
   )
 }
 
-function RouteViewport({ coordinates }: { coordinates: [number, number][] }) {
+function FollowUserController({ userPos, active }: { userPos: UserPos; active: boolean }) {
   const map = useMap()
+  const previous = useRef<UserPos>(null)
+
   useEffect(() => {
-    if (coordinates.length >= 2) {
-      map.fitBounds(coordinates, { padding: [70, 70], maxZoom: 18, animate: true })
+    if (!active || !userPos || userPos.accuracy > 35) {
+      previous.current = userPos
+      return
     }
-  }, [coordinates, map])
+
+    // The first fix is framed by FlyController at navigation start. Only pan
+    // for subsequent accurate fixes, avoiding competing flyTo/panTo animations.
+    if (previous.current && previous.current.accuracy <= 35) {
+      const moved = map.distance(
+        [previous.current.lat, previous.current.lng],
+        [userPos.lat, userPos.lng]
+      )
+      if (moved >= 4) {
+        map.panTo([userPos.lat, userPos.lng], { animate: true, duration: 0.45 })
+      }
+    }
+    previous.current = userPos
+  }, [active, map, userPos])
+
   return null
 }
 
@@ -187,6 +205,7 @@ export default function MapCore({
   userPos,
   sharedLocation,
   routeCoordinates,
+  navigationActive,
   basemap,
   flyTarget,
   onMapReady,
@@ -238,7 +257,7 @@ export default function MapCore({
       <ScaleControl position="bottomright" imperial={false} />
       <FlyController target={flyTarget} />
       <ClickHandler onSelect={onSelect} />
-      <RouteViewport coordinates={routeCoordinates} />
+      <FollowUserController userPos={userPos} active={navigationActive} />
       <LocationLabels locations={points} selectedId={selectedId} />
 
       {/* Approximate campus envelope — orientation aid, NOT a surveyed boundary */}
