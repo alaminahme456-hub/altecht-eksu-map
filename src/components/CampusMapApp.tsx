@@ -99,6 +99,11 @@ export default function CampusMapApp() {
     void load()
   }, [load])
 
+  // Count this browser once per Lagos calendar day. The server owns the visitor cookie.
+  useEffect(() => {
+    void fetch('/api/analytics/visit', { method: 'POST', cache: 'no-store', keepalive: true }).catch(() => {})
+  }, [])
+
   // Shared-location links open this same EKSU map and focus the shared point.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
