@@ -568,8 +568,6 @@ export default function CampusMapApp() {
         </div>
       </div>
 
-      <CommunityPanel />
-
       {/* ---------- Floating controls (right) ---------- */}
       <div className="absolute bottom-28 right-3 z-[1000] flex flex-col gap-2 sm:bottom-24">
         <MapButton label="Zoom in" onClick={() => mapRef.current?.zoomIn()}>
@@ -591,6 +589,7 @@ export default function CampusMapApp() {
         <MapButton label="Map legend" onClick={() => setShowLegend((s) => !s)} active={showLegend}>
           <Info className="h-4.5 w-4.5" />
         </MapButton>
+        <CommunityPanel />
       </div>
 
       {routeSummary && routeCoordinates.length > 1 && (
