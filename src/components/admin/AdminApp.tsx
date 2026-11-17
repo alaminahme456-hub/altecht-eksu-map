@@ -43,6 +43,7 @@ import LocationForm from '@/components/admin/LocationForm'
 import QualityPanel from '@/components/admin/QualityPanel'
 import ImportExportPanel from '@/components/admin/ImportExportPanel'
 import WifiCoveragePanel from '@/components/admin/WifiCoveragePanel'
+import VisitorAnalyticsPanel from '@/components/admin/VisitorAnalyticsPanel'
 
 export default function AdminApp() {
   const [authed, setAuthed] = useState<boolean | null>(null)
@@ -325,6 +326,7 @@ export default function AdminApp() {
                 </TabsTrigger>
                 <TabsTrigger value="data" className="text-xs">Import / Export</TabsTrigger>
                 <TabsTrigger value="wifi" className="text-xs">Smart School Wi-Fi</TabsTrigger>
+                <TabsTrigger value="visitors" className="text-xs">Visitors</TabsTrigger>
               </TabsList>
             </div>
 
