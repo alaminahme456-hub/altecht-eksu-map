@@ -65,6 +65,8 @@ export default function AdminApp() {
   const [formInitialCategory, setFormInitialCategory] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<LocationDTO | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [actionBusy, setActionBusy] = useState<string | null>(null)
 
   const loadLocations = useCallback(async () => {
     setListLoading(true)
@@ -132,29 +134,47 @@ export default function AdminApp() {
   }
 
   const toggleVerify = async (loc: LocationDTO) => {
+    if (actionBusy) return
     const next = loc.status === 'verified' ? 'draft' : 'verified'
-    const res = await fetch(`/api/locations/${loc.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: next }),
-    })
-    if (res.ok) {
+    setActionBusy(loc.id)
+    setActionError(null)
+    try {
+      const res = await fetch(`/api/locations/${loc.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: next }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not update this location.')
       setNotice(next === 'verified'
         ? `“${loc.name}” marked as VERIFIED GPS data.`
         : `“${loc.name}” returned to UNVERIFIED draft.`)
       void loadLocations()
       void loadQuality()
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Could not update this location.')
+    } finally {
+      setActionBusy(null)
     }
   }
 
   const doDelete = async () => {
-    if (!deleteTarget) return
-    const res = await fetch(`/api/locations/${deleteTarget.id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setNotice(`Deleted “${deleteTarget.name}”.`)
+    if (!deleteTarget || actionBusy) return
+    const target = deleteTarget
+    setActionBusy(target.id)
+    setActionError(null)
+    try {
+      const res = await fetch(`/api/locations/${target.id}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not delete this location.')
+      setNotice(`Deleted “${target.name}”.`)
       setDeleteTarget(null)
       void loadLocations()
       void loadQuality()
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'Could not delete this location.')
+    } finally {
+      setActionBusy(null)
     }
   }
 
@@ -242,6 +262,15 @@ export default function AdminApp() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-4">
+        {actionError && (
+          <Alert variant="destructive" className="mb-4">
+            <TriangleAlert className="h-4 w-4" />
+            <AlertDescription className="flex items-start justify-between gap-2 text-xs">
+              <span>{actionError}</span>
+              <button onClick={() => setActionError(null)} aria-label="Dismiss error">✕</button>
+            </AlertDescription>
+          </Alert>
+        )}
         {notice && (
           <Alert className="mb-4 border-emerald-300 bg-emerald-50 text-emerald-900">
             <ShieldCheck className="h-4 w-4" />
@@ -405,7 +434,7 @@ export default function AdminApp() {
                           {l.photos.length > 0 && ` · ${l.photos.length} photo${l.photos.length > 1 ? 's' : ''}`}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-1.5">
-                          <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => toggleVerify(l)}>
+                          <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => void toggleVerify(l)} disabled={actionBusy !== null}>
                             {l.status === 'verified' ? <ShieldOff className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3" />}
                             {l.status === 'verified' ? 'Unverify' : 'Verify'}
                           </Button>
@@ -413,6 +442,7 @@ export default function AdminApp() {
                             variant="outline"
                             size="sm"
                             className="h-7 text-[11px]"
+                            disabled={actionBusy !== null}
                             onClick={() => {
                               setFormEditing(l)
                               setFormOpen(true)
@@ -420,7 +450,7 @@ export default function AdminApp() {
                           >
                             <Pencil className="h-3 w-3" /> Edit
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-7 text-[11px] text-red-700 hover:text-red-800" onClick={() => setDeleteTarget(l)}>
+                          <Button variant="ghost" size="sm" className="h-7 text-[11px] text-red-700 hover:text-red-800" onClick={() => setDeleteTarget(l)} disabled={actionBusy !== null}>
                             <Trash2 className="h-3 w-3" /> Delete
                           </Button>
                         </div>
@@ -475,9 +505,9 @@ export default function AdminApp() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={doDelete}>
-              <Trash2 className="h-4 w-4" /> Delete
+            <AlertDialogCancel disabled={actionBusy !== null}>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={(event) => { event.preventDefault(); void doDelete() }} disabled={actionBusy !== null}>
+              {actionBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} {actionBusy ? 'Deleting…' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
