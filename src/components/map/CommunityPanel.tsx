@@ -109,7 +109,7 @@ export default function CommunityPanel() {
         </div>
       )}
 
-      <div className="absolute bottom-20 right-3 z-[1000]">
+      <div className="relative">
         <ExpandableActionButton
           icon={<Users className="h-4 w-4" />}
           label="Community"
