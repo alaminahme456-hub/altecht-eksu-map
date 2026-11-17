@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { MessageCircle, Send, Users, Eye, EyeOff, Trash2, X } from 'lucide-react'
 import SurveyPanel from '@/components/map/SurveyPanel'
+import ExpandableActionButton from '@/components/ui/expandable-action-button'
 
 type GeneralComment = { id: string; body: string; isVisible: boolean; createdAt: string }
 type SurveyPreview = { id: string; question: string }
@@ -108,14 +109,13 @@ export default function CommunityPanel() {
         </div>
       )}
 
-      <Button
-        size="sm"
-        variant="outline"
-        className="absolute bottom-20 right-3 z-[1000] h-10 rounded-full border bg-white/95 px-3 shadow-md backdrop-blur"
-        onClick={() => setOpen(true)}
-      >
-        <Users className="mr-1.5 h-4 w-4" /> Community
-      </Button>
+      <div className="absolute bottom-20 right-3 z-[1000]">
+        <ExpandableActionButton
+          icon={<Users className="h-4 w-4" />}
+          label="Community"
+          onClick={() => setOpen(true)}
+        />
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[88dvh] max-w-lg overflow-y-auto rounded-2xl">
