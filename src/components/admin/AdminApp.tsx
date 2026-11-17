@@ -456,6 +456,11 @@ export default function AdminApp() {
             <TabsContent value="wifi">
               <WifiCoveragePanel />
             </TabsContent>
+
+            {/* ------- Visitor analytics ------- */}
+            <TabsContent value="visitors">
+              <VisitorAnalyticsPanel />
+            </TabsContent>
           </Tabs>
         )}
       </main>
