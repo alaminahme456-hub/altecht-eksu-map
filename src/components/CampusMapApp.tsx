@@ -389,7 +389,7 @@ export default function CampusMapApp() {
   }
 
   const shareMyLocation = () => {
-    if (!navigator.geolocation) { setShareError('Location is not supported on this device.'); setShareUrl(''); return }
+    if (!navigator.geolocation) { setShareError('Location is not supported on this device.'); setShareUrl('error'); return }
     setShareBusy(true)
     setShareError(null)
     navigator.geolocation.getCurrentPosition((pos) => {
