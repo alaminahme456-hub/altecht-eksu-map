@@ -218,7 +218,9 @@ export default function CampusMapApp() {
         lastOffRouteAlertRef.current = 0
         setNavigationDestination(destination)
         setNavigationStatus('active')
-        setFlyTarget({ lat: destination.lat, lng: destination.lng, zoom: 18, key: Date.now() })
+        // On first navigation, frame the user's actual starting position. During reroutes,
+        // keep the live map camera with the user instead of jumping to the destination.
+        if (!navigationDestination) setFlyTarget({ lat: origin.lat, lng: origin.lng, zoom: 19, key: Date.now() })
         setSelectedId(destination.id)
         setSheetOpen(false)
         setDirectionPickerOpen(false)
@@ -242,7 +244,9 @@ export default function CampusMapApp() {
       lastOffRouteAlertRef.current = 0
       setNavigationDestination(destination)
       setNavigationStatus('active')
-      setFlyTarget({ lat: destination.lat, lng: destination.lng, zoom: 18, key: Date.now() })
+      // Start navigation at the user's GPS fix; later reroutes must not pull the
+      // camera away from the moving user.
+      if (!navigationDestination) setFlyTarget({ lat: origin.lat, lng: origin.lng, zoom: 19, key: Date.now() })
       setSelectedId(destination.id)
       setSheetOpen(false)
       setDirectionPickerOpen(false)
