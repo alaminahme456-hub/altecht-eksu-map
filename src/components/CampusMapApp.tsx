@@ -38,6 +38,7 @@ import { routeOnRecordedPaths } from '@/lib/path-routing'
 import type { FlyTarget, MapCoreProps } from '@/components/map/MapCore'
 import SurveyPanel from '@/components/map/SurveyPanel'
 import CommunityPanel from '@/components/map/CommunityPanel'
+import ExpandableActionButton from '@/components/ui/expandable-action-button'
 
 const MapCore = dynamic(() => import('@/components/map/MapCore'), {
   ssr: false,
@@ -884,18 +885,13 @@ function MapButton({
   active?: boolean
 }) {
   return (
-    <Button
-      size="icon"
-      variant="outline"
+    <ExpandableActionButton
+      icon={children}
+      label={label}
       onClick={onClick}
-      title={label}
-      aria-label={label}
-      className={`h-10 w-10 rounded-full border bg-white/95 shadow-md backdrop-blur hover:bg-muted ${
-        active ? 'border-stone-900 bg-stone-900 text-white hover:bg-stone-800' : ''
-      }`}
-    >
-      {children}
-    </Button>
+      active={active}
+      className="bg-white/95"
+    />
   )
 }
 
