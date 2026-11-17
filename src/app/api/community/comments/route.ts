@@ -12,7 +12,7 @@ const cookieOptions = {
   maxAge: 60 * 60 * 24 * 365,
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const admin = await isAdminRequest()
     const query: Record<string, string> = { order: 'createdAt.desc', limit: '100' }
