@@ -37,6 +37,7 @@ import type { LocationDTO } from '@/lib/types'
 import { routeOnRecordedPaths } from '@/lib/path-routing'
 import type { FlyTarget, MapCoreProps } from '@/components/map/MapCore'
 import SurveyPanel from '@/components/map/SurveyPanel'
+import CommunityPanel from '@/components/map/CommunityPanel'
 
 const MapCore = dynamic(() => import('@/components/map/MapCore'), {
   ssr: false,
@@ -549,6 +550,8 @@ export default function CampusMapApp() {
           </button>
         </div>
       </div>
+
+      <CommunityPanel />
 
       {/* ---------- Floating controls (right) ---------- */}
       <div className="absolute bottom-28 right-3 z-[1000] flex flex-col gap-2 sm:bottom-24">
