@@ -65,6 +65,7 @@ export default function LocationForm({
   const [staged, setStaged] = useState<{ name: string; url: string; file: File }[]>([])
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [savedLocation, setSavedLocation] = useState<LocationDTO | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [recording, setRecording] = useState(false)
   const [recordingMessage, setRecordingMessage] = useState<string | null>(null)
@@ -179,16 +180,17 @@ export default function LocationForm({
     if (staged.length === 0) return
     setUploading(true)
     try {
-      for (const s of staged) {
+      for (const photo of staged) {
         const fd = new FormData()
-        fd.append('files', s.file)
+        fd.append('files', photo.file)
         const res = await fetch(`/api/locations/${locationId}/photos`, { method: 'POST', body: fd })
         if (!res.ok) {
           const j = await res.json().catch(() => ({}))
-          throw new Error(j.error || 'Photo upload failed')
+          throw new Error(j.error || `Photo upload failed for ${photo.name}`)
         }
+        // Remove each successful upload immediately so a retry never uploads it twice.
+        setStaged((current) => current.filter((item) => item.url !== photo.url))
       }
-      setStaged([])
     } finally {
       setUploading(false)
     }
@@ -231,25 +233,33 @@ export default function LocationForm({
     stopRecording()
     setSaving(true)
     try {
-      const res = await fetch(editing ? `/api/locations/${editing.id}` : '/api/locations', {
-        method: editing ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, full: true }),
-      })
-      const responseText = await res.text()
-      let data: { location?: LocationDTO; warnings?: string[]; error?: string; issues?: unknown } = {}
-      if (responseText.trim()) {
-        try {
-          data = JSON.parse(responseText)
-        } catch {
-          throw new Error(`The server returned an invalid response (HTTP ${res.status}). Please try again; if it continues, check the deployment logs.`)
+      // If a new location was already created but photo upload failed, reuse it on retry.
+      let location = !editing ? savedLocation : null
+      let warnings: string[] = []
+      if (!location) {
+        const res = await fetch(editing ? `/api/locations/${editing.id}` : '/api/locations', {
+          method: editing ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, full: true }),
+        })
+        const responseText = await res.text()
+        let data: { location?: LocationDTO; warnings?: string[]; error?: string; issues?: unknown } = {}
+        if (responseText.trim()) {
+          try {
+            data = JSON.parse(responseText)
+          } catch {
+            throw new Error(`The server returned an invalid response (HTTP ${res.status}). Please try again; if it continues, check the deployment logs.`)
+          }
         }
+        if (!res.ok || !data.location) {
+          throw new Error(data.error || `Save failed (HTTP ${res.status}). The server did not return a location record.`)
+        }
+        location = data.location
+        warnings = data.warnings ?? []
+        if (!editing) setSavedLocation(location)
       }
-      if (!res.ok || !data.location) {
-        throw new Error(data.error || `Save failed (HTTP ${res.status}). The server did not return a location record.`)
-      }
-      await uploadStaged(data.location.id)
-      onSaved(data.location, data.warnings ?? [])
+      await uploadStaged(location.id)
+      onSaved(location, warnings)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')
     } finally {
@@ -533,7 +543,7 @@ export default function LocationForm({
           )}
           <Button onClick={save} disabled={saving || uploading} className="ml-auto flex-1 sm:flex-none">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {editing ? 'Save changes' : 'Save record'}
+            {saving ? 'Saving…' : savedLocation ? 'Retry save' : editing ? 'Save changes' : 'Save record'}
           </Button>
         </div>
       </div>
