@@ -23,9 +23,9 @@ export default function ExpandableActionButton({
   className,
   variant = 'outline',
   size = 'sm',
-  autoCollapseMs = 1800,
+  autoCollapseMs = 10000,
 }: ExpandableActionButtonProps) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const collapseLater = useCallback(() => {
