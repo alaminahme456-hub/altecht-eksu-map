@@ -75,7 +75,10 @@ export default function ExpandableActionButton({
       onPointerLeave={(event) => {
         if (event.pointerType === 'mouse') collapseLater()
       }}
-      onFocus={expand}
+      onFocus={(event) => {
+        // Expand for keyboard navigation, but never re-expand after a touch/click.
+        if (event.currentTarget.matches(':focus-visible')) expand()
+      }}
       onBlur={collapseLater}
       className={cn(
         'group inline-flex h-10 w-10 shrink-0 self-end origin-right items-center justify-center gap-2 overflow-hidden rounded-full border bg-white/95 px-0 shadow-md backdrop-blur transition-[width,padding,background-color,color,border-radius] duration-300 ease-out hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/50',
