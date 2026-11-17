@@ -454,6 +454,7 @@ export default function CampusMapApp() {
         }}
         userPos={userPos}
         routeCoordinates={routeCoordinates}
+        navigationActive={!!navigationDestination}
         basemap={basemap}
         flyTarget={flyTarget}
         onMapReady={(m) => (mapRef.current = m)}
