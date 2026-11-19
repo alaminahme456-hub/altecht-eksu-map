@@ -474,7 +474,7 @@ export default function CampusMapApp() {
               <span className="block text-[10px] font-medium text-muted-foreground">Campus Map</span>
             </span>
           </div>
-          <div className="relative z-[1101] flex-1">
+          <div className="relative z-[9999] flex-1">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
@@ -484,7 +484,7 @@ export default function CampusMapApp() {
               aria-label="Search campus locations"
             />
             {searchResults.length > 0 && (
-              <div className="absolute inset-x-0 top-11 z-50 overflow-hidden rounded-lg border bg-white shadow-lg">
+              <div className="absolute inset-x-0 top-full z-[9999] mt-2 overflow-hidden rounded-lg border bg-white shadow-2xl">
                 <ScrollArea className="max-h-64">
                   {searchResults.map((l) => {
                     const meta = categoryMeta(l.category)
