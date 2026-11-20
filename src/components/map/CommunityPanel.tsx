@@ -11,7 +11,7 @@ import ExpandableActionButton from '@/components/ui/expandable-action-button'
 
 type GeneralComment = { id: string; body: string; isVisible: boolean; createdAt: string }
 
-export default function CommunityPanel() {
+export default function CommunityPanel({ onOpenChange }: { onOpenChange?: (open: boolean) => void }) {
   const [open, setOpen] = useState(false)
   const [comments, setComments] = useState<GeneralComment[]>([])
   const [admin, setAdmin] = useState(false)
@@ -86,11 +86,11 @@ export default function CommunityPanel() {
         <ExpandableActionButton
           icon={<Users className="h-4 w-4" />}
           label="Community"
-          onClick={() => setOpen(true)}
+          onClick={() => { setOpen(true); onOpenChange?.(true) }}
         />
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(nextOpen) => { setOpen(nextOpen); onOpenChange?.(nextOpen) }}>
         <DialogContent className="max-h-[88dvh] max-w-lg overflow-y-auto rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> EKSU Map Community</DialogTitle>
