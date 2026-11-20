@@ -31,11 +31,9 @@ export default function InstallPWA() {
     window.addEventListener('appinstalled', onInstalled)
 
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch((error) => {
-          console.error('PWA service worker registration failed:', error)
-        })
-      }, { once: true })
+      navigator.serviceWorker.register('/sw.js').catch((error) => {
+        console.error('PWA service worker registration failed:', error)
+      })
     }
 
     return () => {
