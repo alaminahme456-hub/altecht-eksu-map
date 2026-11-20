@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "Interactive 2D navigation map of the Ekiti State University (EKSU) main campus — real GPS data, building outlines, walking paths, and an administrator data-collection dashboard.",
   keywords: ["EKSU", "campus map", "navigation", "GIS", "GeoJSON", "Ado-Ekiti"],
   applicationName: "ALTECH ALTECH EKSU Map Map",
-  appleWebApp: { capable: true, title: "ALTECH EKSU Map", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "EKSU Map", statusBarStyle: "default" },
   formatDetection: { telephone: false },
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>",
