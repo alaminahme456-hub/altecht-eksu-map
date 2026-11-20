@@ -1,5 +1,5 @@
 const CACHE_NAME = 'eksu-smart-campus-v1'
-const OFFLINE_URL = '/offline'
+const OFFLINE_URL = '/offline.html'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
