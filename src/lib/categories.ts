@@ -25,6 +25,8 @@ export const CATEGORIES = [
   'Schools',
   'Shops',
   'Smart School Wi-Fi',
+  'Churches',
+  'Mosques',
 ] as const
 
 export type Category = (typeof CATEGORIES)[number]
@@ -55,6 +57,8 @@ export const CATEGORY_META: Record<
   Schools: { icon: '🏫', color: '#9333ea' },
   Shops: { icon: '🛍️', color: '#c2410c' },
   'Smart School Wi-Fi': { icon: '📶', color: '#0f766e' },
+  Churches: { icon: '⛪', color: '#7c3aed' },
+  Mosques: { icon: '🕌', color: '#0f766e' },
 }
 
 export function categoryMeta(category: string) {
