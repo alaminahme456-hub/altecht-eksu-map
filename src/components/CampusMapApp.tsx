@@ -86,6 +86,7 @@ export default function CampusMapApp() {
   const [sharedLocation, setSharedLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [sharedLocationNotice, setSharedLocationNotice] = useState(false)
   const [shareAfterLocateOpen, setShareAfterLocateOpen] = useState(false)
+  const [communityOpen, setCommunityOpen] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -465,7 +466,8 @@ export default function CampusMapApp() {
         MADE BY <span className="font-extrabold text-stone-950">ALTECH</span>
       </div>
 
-      {/* ---------- Top bar: title + search ---------- */}
+      {/* Search and category filters are only shown on the main map screen. */}
+      {!communityOpen && (
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="pointer-events-auto mx-auto flex max-w-xl items-center gap-2 rounded-xl border bg-white/95 p-2 shadow-md backdrop-blur">
           <div className="flex items-center gap-1.5 pl-1.5 pr-1 text-primary">
@@ -574,6 +576,7 @@ export default function CampusMapApp() {
           </button>
         </div>
       </div>
+      )}
 
       {/* ---------- Floating controls (right) ---------- */}
       <div className="absolute bottom-28 right-3 z-[1000] flex flex-col gap-2 sm:bottom-24">
@@ -596,7 +599,7 @@ export default function CampusMapApp() {
         <MapButton label="Map legend" onClick={() => setShowLegend((s) => !s)} active={showLegend}>
           <Info className="h-4.5 w-4.5" />
         </MapButton>
-        <CommunityPanel />
+        <CommunityPanel onOpenChange={setCommunityOpen} />
       </div>
 
       {routeSummary && routeCoordinates.length > 1 && (
