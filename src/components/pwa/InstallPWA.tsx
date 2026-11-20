@@ -60,7 +60,7 @@ export default function InstallPWA() {
       <button
         type="button"
         onClick={install}
-        aria-label="Install EKSU Smart Campus"
+        aria-label="Install ALTECH ALTECH EKSU Map Map"
         className="inline-flex h-9 items-center gap-1.5 rounded-md border border-teal-700/20 bg-teal-50 px-2.5 text-xs font-semibold text-teal-800 shadow-sm hover:bg-teal-100"
       >
         <Download className="h-4 w-4" />
