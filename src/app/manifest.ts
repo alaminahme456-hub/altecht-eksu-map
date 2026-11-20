@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
     name: 'ALTECH ALTECH EKSU Map Map',
-    short_name: 'ALTECH EKSU Map',
+    short_name: 'EKSU Map',
     description: 'ALTECH ALTECH ALTECH EKSU Map Map Map and walking navigation.',
     start_url: '/',
     scope: '/',
