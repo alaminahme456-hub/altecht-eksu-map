@@ -3,9 +3,9 @@ import type { MetadataRoute } from 'next'
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'EKSU Smart Campus',
-    short_name: 'EKSU Campus',
-    description: 'ALTECH EKSU Smart Campus Map and walking navigation.',
+    name: 'ALTECH ALTECH EKSU Map Map',
+    short_name: 'ALTECH EKSU Map',
+    description: 'ALTECH ALTECH ALTECH EKSU Map Map Map and walking navigation.',
     start_url: '/',
     scope: '/',
     display: 'standalone',
