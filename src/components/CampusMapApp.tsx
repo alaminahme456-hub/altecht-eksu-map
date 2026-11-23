@@ -469,7 +469,7 @@ export default function CampusMapApp() {
       {/* Search and category filters are only shown on the main map screen. */}
       {!communityOpen && (
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="pointer-events-auto mx-auto flex max-w-xl items-center gap-2 rounded-xl border bg-white/95 p-2 shadow-md backdrop-blur">
+        <div className="pointer-events-auto relative z-20 mx-auto flex max-w-xl items-center gap-2 rounded-xl border bg-white/95 p-2 shadow-md backdrop-blur">
           <div className="flex items-center gap-1.5 pl-1.5 pr-1 text-primary">
             <MapPinned className="h-5 w-5 shrink-0" />
             <span className="hidden text-sm font-bold leading-tight sm:block">
@@ -487,7 +487,7 @@ export default function CampusMapApp() {
               aria-label="Search campus locations"
             />
             {searchResults.length > 0 && (
-              <div className="search-results-dropdown absolute inset-x-0 top-full mt-2 overflow-hidden rounded-lg border bg-white shadow-2xl">
+              <div className="search-results-dropdown absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-lg border bg-white shadow-2xl">
                 <ScrollArea className="max-h-64">
                   {searchResults.map((l) => {
                     const meta = categoryMeta(l.category)
