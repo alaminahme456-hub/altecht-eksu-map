@@ -87,6 +87,7 @@ export default function CampusMapApp() {
   const [sharedLocationNotice, setSharedLocationNotice] = useState(false)
   const [shareAfterLocateOpen, setShareAfterLocateOpen] = useState(false)
   const [communityOpen, setCommunityOpen] = useState(false)
+  const [shareMapOpen, setShareMapOpen] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -470,13 +471,15 @@ export default function CampusMapApp() {
       {!communityOpen && (
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="pointer-events-auto relative z-20 mx-auto flex max-w-xl items-center gap-2 rounded-xl border bg-white/95 p-2 shadow-md backdrop-blur">
-          <div className="flex items-center gap-1.5 pl-1.5 pr-1 text-primary">
-            <MapPinned className="h-5 w-5 shrink-0" />
-            <span className="hidden text-sm font-bold leading-tight sm:block">
-              ALTECH EKSU
-              <span className="block text-[10px] font-medium text-muted-foreground">Campus Map</span>
-            </span>
-          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-9 shrink-0 px-2.5 text-sm font-semibold text-primary"
+            onClick={() => setShareMapOpen(true)}
+          >
+            Share map
+          </Button>
           <div className="relative z-[9999] flex-1">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -802,6 +805,30 @@ export default function CampusMapApp() {
           <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => setShareAfterLocateOpen(false)}>No, thanks</Button>
             <Button className="flex-1" onClick={shareLocatedPosition}><Share2 className="mr-2 h-4 w-4" />Yes, share</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={shareMapOpen} onOpenChange={setShareMapOpen}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Share EKSU Map</DialogTitle>
+            <DialogDescription>Scan this QR code to open the ALTECH EKSU Map.</DialogDescription>
+          </DialogHeader>
+          <div className="mx-auto w-full max-w-[280px] rounded-xl border bg-white p-3">
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent('https://altecht-eksu-map.vercel.app/')}`}
+              alt="QR code linking to EKSU Map"
+              width="300"
+              height="300"
+              className="h-auto w-full"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button className="flex-1" onClick={() => { void navigator.share?.({ title: 'EKSU Map', text: 'Open ALTECH EKSU Map', url: 'https://altecht-eksu-map.vercel.app/' }).catch(() => {}) }}>
+              <Share2 className="mr-2 h-4 w-4" />Share link
+            </Button>
+            <Button variant="outline" onClick={() => { void navigator.clipboard.writeText('https://altecht-eksu-map.vercel.app/') }}>Copy link</Button>
           </div>
         </DialogContent>
       </Dialog>
