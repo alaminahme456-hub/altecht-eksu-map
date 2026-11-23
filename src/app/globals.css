@@ -263,3 +263,9 @@
   outline: 2px solid #f59e0b;
   outline-offset: 2px;
 }
+
+/* Keep location search suggestions above the category filter row. */
+.search-results-dropdown {
+  position: absolute;
+  z-index: 20000 !important;
+}
