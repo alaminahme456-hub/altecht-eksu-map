@@ -264,8 +264,9 @@
   outline-offset: 2px;
 }
 
-/* Keep location search suggestions above the category filter row. */
+/* Search suggestions stay above the category row; the search bar parent owns the stacking layer. */
 .search-results-dropdown {
   position: absolute;
-  z-index: 20000 !important;
+  z-index: 50;
+  isolation: isolate;
 }
