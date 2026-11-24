@@ -463,7 +463,7 @@ export default function CampusMapApp() {
         onMapReady={(m) => (mapRef.current = m)}
       />
 
-      <div className="pointer-events-none absolute bottom-3 left-3 z-[500] rounded-md border border-white/70 bg-white/80 px-2.5 py-1.5 text-[10px] font-semibold tracking-wide text-stone-700 shadow-sm backdrop-blur">
+      <div className="pointer-events-none absolute bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 z-[500] rounded-md border border-white/70 bg-white/80 px-2.5 py-1.5 text-[10px] font-semibold tracking-wide text-stone-700 shadow-sm backdrop-blur">
         MADE BY <span className="font-extrabold text-stone-950">ALTECH</span>
       </div>
 
@@ -582,7 +582,7 @@ export default function CampusMapApp() {
       )}
 
       {/* ---------- Floating controls (right) ---------- */}
-      <div className="absolute bottom-28 right-3 z-[1000] flex flex-col gap-2 sm:bottom-24">
+      <div className="absolute bottom-[calc(env(safe-area-inset-bottom)+7rem)] right-3 z-[1000] flex flex-col gap-2 sm:bottom-24">
         <MapButton label="Zoom in" onClick={() => mapRef.current?.zoomIn()}>
           <Plus className="h-4.5 w-4.5" />
         </MapButton>
@@ -616,12 +616,12 @@ export default function CampusMapApp() {
       )}
 
       {(geoError || routeError) && (
-        <div className="absolute inset-x-0 bottom-6 z-[1000] mx-auto w-fit max-w-[92%]"><div className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-xs font-medium text-white shadow-lg"><TriangleAlert className="h-4 w-4" /> {routeError || geoError}<button onClick={() => { setGeoError(null); setRouteError(null) }} aria-label="Dismiss"><X className="h-4 w-4" /></button></div></div>
+        <div className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] z-[1000] mx-auto w-fit max-w-[92%]"><div className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-2 text-xs font-medium text-white shadow-lg"><TriangleAlert className="h-4 w-4" /> {routeError || geoError}<button onClick={() => { setGeoError(null); setRouteError(null) }} aria-label="Dismiss"><X className="h-4 w-4" /></button></div></div>
       )}
 
       {/* ---------- Legend ---------- */}
       {showLegend && (
-        <div className="absolute bottom-3 left-3 z-[1000] w-80 max-w-[90%] max-h-[78dvh] overflow-y-auto rounded-xl border bg-white/97 p-3 text-xs shadow-xl">
+        <div className="absolute bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 z-[1000] w-80 max-w-[90%] max-h-[78dvh] overflow-y-auto rounded-xl border bg-white/97 p-3 text-xs shadow-xl">
           <div className="mb-2 flex items-center justify-between">
             <p className="font-bold">Map legend</p>
             <button onClick={() => setShowLegend(false)} aria-label="Close legend">
@@ -917,7 +917,7 @@ export default function CampusMapApp() {
       </Dialog>
 
       {loading && (
-        <div className="absolute bottom-3 left-3 z-[900] flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs shadow">
+        <div className="absolute bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 z-[900] flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs shadow">
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading campus data…
         </div>
       )}
