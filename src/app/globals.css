@@ -112,6 +112,29 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* iOS Safari and installed PWA viewport defaults */
+html {
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: #0f766e;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Respect the iPhone safe areas without changing the map's layout. */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
